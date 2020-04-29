@@ -4,7 +4,18 @@ Welcome to the official documentation of `Polaris IO <https://github.com/dynamiq
 
 .. toctree::
    :maxdepth: 1
+   :caption: About
+   :name: sec-about
+
+   about/intro
+   about/faq
+
+.. toctree::
+   :maxdepth: 1
    :caption: Tutorials
    :name: sec-tutorials
 
+   tutorials/text
+   tutorials/json
    tutorials/yaml
+   tutorials/binary

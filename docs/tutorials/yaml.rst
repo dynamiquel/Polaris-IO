@@ -1,4 +1,5 @@
-.. _doc_yaml:
+.. _doc_tutorials_yaml:
+
 Yaml
 ====
 Introduction
@@ -6,7 +7,7 @@ Introduction
 From `The Official YAML Web Site <https://yaml.org/>`__:
     YAML is a human friendly data serialization standard for all programming languages.
 
-YAML allows users to store their C# objects into an easily-readable text file, which can be later loaded. Due to its readability, it is often used for config files and modding. It is very similar to JSON, but even more readable.
+YAML allows users to store their C# objects into an easily-readable text file, which can be later loaded. Due to its readability, it is often used for config files and modding. It is very similar to `JSON <json.rst>`__, but even more readable.
 
 Since YAML can be used for all programming languages, you can create a YAML file from a C# object in Unity and easily convert it to a Python object in another program, and vice versa.
 
