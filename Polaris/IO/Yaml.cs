@@ -65,12 +65,7 @@ namespace Polaris.IO
         {
             CheckExtension(ref fileLocation);
 
-            var serialiser = new SerializerBuilder()
-                .WithNamingConvention(namingConvention)
-                .EmitDefaults()
-                .Build();
-            
-            var yamlString = serialiser.Serialize(obj);
+            var yamlString = ToString(obj, namingConvention);
 
             return Text.Write(fileLocation, yamlString);
         }
@@ -117,13 +112,8 @@ namespace Polaris.IO
         public static async Task<bool> WriteAsync(string fileLocation, object obj, INamingConvention namingConvention)
         {
             CheckExtension(ref fileLocation);
-                
-            var serialiser = new SerializerBuilder()
-                .WithNamingConvention(namingConvention)
-                .EmitDefaults()
-                .Build();
-            
-            var yamlString = serialiser.Serialize(obj);
+
+            var yamlString = ToString(obj, namingConvention);
 
             return await Text.WriteAsync(fileLocation, yamlString);
         }
@@ -149,7 +139,7 @@ namespace Polaris.IO
             CheckExtension(ref fileLocation);
             
             string yamlString = Text.Read(fileLocation);
-            var obj = ReadString<T>(yamlString, namingConvention, true);
+            var obj = FromString<T>(yamlString, namingConvention, true);
 
             return obj;
         }
@@ -198,7 +188,7 @@ namespace Polaris.IO
             CheckExtension(ref fileLocation);
 
             string yamlString = await Text.ReadAsync(fileLocation);
-            var obj = ReadString<T>(yamlString, namingConvention, true);
+            var obj = FromString<T>(yamlString, namingConvention, true);
             
             return obj;
         }
@@ -210,7 +200,7 @@ namespace Polaris.IO
         /// <param name="namingConvention">The naming convention to use when deserialising the object as YAML. Must match the naming convention used to serialise.</param>
         /// <param name="useJsonSchema">Enabling may fix deserialisation issues where everything is converted to a string instead of the expected data type.</param>
         /// <returns>The object within the string or if deserialisation was unsuccessful, a default object of the given type.</returns>
-        public static T ReadString<T>(string yamlString, INamingConvention namingConvention, bool useJsonSchema)
+        public static T FromString<T>(string yamlString, INamingConvention namingConvention, bool useJsonSchema)
         {
             T obj = default;
 
@@ -218,6 +208,22 @@ namespace Polaris.IO
             obj = deserialiser.Deserialize<T>(yamlString);
 
             return obj;
+        }
+        
+        /// <summary>
+        /// Converts the object to a YAML-formatted string and returns it.
+        /// </summary>
+        /// <param name="obj">The object to convert to a YAML-formatted string.</param>
+        /// <param name="namingConvention">The naming convention to use when serialising the object as YAML.</param>
+        /// <returns>The YAML-formatted string created from the object.</returns>
+        public static string ToString(object obj, INamingConvention namingConvention)
+        {
+            var serialiser = new SerializerBuilder()
+                .WithNamingConvention(namingConvention)
+                .EmitDefaults()
+                .Build();
+            
+            return serialiser.Serialize(obj);
         }
 
         private static Deserializer CreateDeserialiser(INamingConvention namingConvention, bool jsonSchema)

@@ -4,7 +4,9 @@ Text
 ====
 Introduction
 ------------
-Not yet implemented.
+Text allows you quickly write and read plain UTF-8 text. It attempts to follow the same principles as ``System.IO.File.WriteAllText`` whiles also working on all platforms.
+
+You can also use Text to write formatted strings to text files or read formatted strings from text files (at the end of the day, it's just a string right?). Both `Json <json.rst>`__ and `Yaml <yaml.rst>`__ use Text for the I/O operations.
 
 Saving strings to text files
 ----------------------------
@@ -16,13 +18,6 @@ To save a string to a text file use ``Text.Write(string fileLocation, string con
 
     public class GameSaver : MonoBehaviour
     {
-        class PlayerData
-        {
-            public string Username { get; set; }
-            public int Kills { get; set; }
-            public int Exp { get; set; }
-        }
-
         string path = Path.Combine(Application.persistentDataPath, "save.data");
 
         void Start()

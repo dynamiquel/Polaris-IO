@@ -70,7 +70,7 @@ By default, ``FileRecoveryExtension`` is ``".partial"``.
 
 There is also **Directory Recovery**, which is a more manual process but follows the same concept.
 
-7. How do I know when to Polaris.IO.File or Polaris.IO.Directory?
+7. How do I know when to use Polaris.IO.File or Polaris.IO.Directory?
 -----------------------------------------------------------------
 Due to how platform-dependent I/O in Unity can be, if ``Polaris.IO.File`` or ``Polaris.IO.Directory`` has a method with the same name as one in ``System.IO.File`` or ``System.IO.Directory``, always try to use it.
 
@@ -101,4 +101,4 @@ When a default extension is enabled and the corresponding file type doesn't alre
 ---------------------------------------------------
 Polaris IO is under the MIT License so you're free to make any modifications, as long as **copyright and license notices are preserved**.
 
-Contributions are **always welcome**.
+Contributions are **always welcome**! ❤️

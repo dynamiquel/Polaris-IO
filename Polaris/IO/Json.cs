@@ -50,7 +50,7 @@ namespace Polaris.IO
         {
             CheckExtension(ref fileLocation);
 
-            var jsonString = JsonConvert.SerializeObject(obj, Formatting.Indented);
+            var jsonString = ToString(obj);
 
             return Text.Write(fileLocation, jsonString);
         }
@@ -85,7 +85,7 @@ namespace Polaris.IO
         {
             CheckExtension(ref fileLocation);
                 
-            var jsonString = JsonConvert.SerializeObject(obj, Formatting.Indented);
+            var jsonString = ToString(obj);
 
             return await Text.WriteAsync(fileLocation, jsonString);
         }
@@ -122,7 +122,7 @@ namespace Polaris.IO
             CheckExtension(ref fileLocation);
             
             string jsonString = Text.Read(fileLocation);
-            var obj = ReadString<T>(jsonString);
+            var obj = FromString<T>(jsonString);
 
             return obj;
         }
@@ -159,7 +159,7 @@ namespace Polaris.IO
             CheckExtension(ref fileLocation);
             
             string jsonString = await Text.ReadAsync(fileLocation);
-            var obj = ReadString<T>(jsonString);
+            var obj = FromString<T>(jsonString);
 
             return obj;
         }
@@ -169,11 +169,23 @@ namespace Polaris.IO
         /// </summary>
         /// <param name="jsonString">The string to convert to JSON.</param>
         /// <returns>The object within the string or if deserialisation was unsuccessful, a default object of the given type.</returns>
-        public static T ReadString<T>(string jsonString)
+        public static T FromString<T>(string jsonString)
         {
             var obj = JsonConvert.DeserializeObject<T>(jsonString);
 
             return obj;
+        }
+
+        /// <summary>
+        /// Converts the object to a JSON-formatted string and returns it.
+        /// </summary>
+        /// <param name="obj">The object to convert to a JSON-formatted string.</param>
+        /// <returns>The JSON-formatted string created from the object.</returns>
+        public static string ToString(object obj)
+        {
+            var jsonString = JsonConvert.SerializeObject(obj, Formatting.Indented);
+            
+            return jsonString;
         }
     }
 }

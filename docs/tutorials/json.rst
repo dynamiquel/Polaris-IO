@@ -44,9 +44,11 @@ To save an object to a JSON file use ``Json.Write(string fileLocation, object ob
             Polaris.IO.Json.Write(path, playerData);
   
             // Contents of the save.data file.
-            // "PlayerName": "James"
-            // "Kills": 125
-            // "Exp": 777
+            // {
+            //     "PlayerName": "James",
+            //     "Kills": 125,
+            //     "Exp": 777
+            // }
         }
     }
 
@@ -202,3 +204,43 @@ You don't need to read text directly from a file to create an object from JSON. 
             var playerData = Json.ReadString<PlayerData>(jsonString);
         }
     }
+
+
+Creating JSON-formatted strings from objects
+--------------------------------------------
+Like, creating objects from JSON-formatted strings, you can also create JSON-formatted strings from objects by using ``Json.ToString(object obj, INamingConvention namingConvention)``. This is useful if you have an alternate method to save the string to a text file.
+
+**Example:**
+
+::
+
+    using Polaris.IO;
+
+    public class GameSaver : MonoBehaviour
+    {
+        class PlayerData
+        {
+            public string Username { get; set; }
+            public int Kills { get; set; }
+            public int Exp { get; set; }
+        }
+
+        string path = Path.Combine(Application.persistentDataPath, "save.data");
+
+        void Start()
+        {
+            var playerData = new PlayerData();
+
+            playerData.Username = "James";
+            playerData.Kills = 125;
+            playerData.Exp = 777;
+
+            // Creates a JSON-formatted string from the given object.
+            // The string is formatted with a Pascal Case naming convention.
+            var jsonString = Json.ToString(playerData, new PascalCaseNamingConvention());
+
+            // An example of an alternate method of saving the JSON-formatted string to a file.
+            System.IO.File.WriteAllText(path, jsonString);
+        }
+    }
+

@@ -176,7 +176,7 @@ Alternatively, you can asynchronously create an object from a YAML file by using
 
 Creating objects from YAML-formatted strings
 --------------------------------------------
-You don't need to read text directly from a file to create an object from YAML. You can also create an object directly from a YAML-formatted string using ``Yaml.ReadString<T>(string yamlString)``. This is useful if you have an alternate method to retrieve the text file.
+You don't need to read text directly from a file to create an object from YAML. You can also create an object directly from a YAML-formatted string using ``Yaml.FromString<T>(string yamlString)``. This is useful if you have an alternate method to retrieve the text file.
 
 **Example:**
 
@@ -201,7 +201,46 @@ You don't need to read text directly from a file to create an object from YAML. 
             string yamlString = System.IO.File.ReadAllText(path);
 
             // Creates a PlayerData object from the given YAML-formatted string.
-            var playerData = Yaml.ReadString<PlayerData>(yamlString);
+            var playerData = Yaml.FromString<PlayerData>(yamlString);
+        }
+    }
+
+
+Creating YAML-formatted strings from objects
+--------------------------------------------
+Like, creating objects from YAML-formatted strings, you can also create YAML-formatted strings from objects by using ``Yaml.ToString(object obj, INamingConvention namingConvention)``. This is useful if you have an alternate method to save the string to a text file.
+
+**Example:**
+
+::
+
+    using Polaris.IO;
+
+    public class GameSaver : MonoBehaviour
+    {
+        class PlayerData
+        {
+            public string Username { get; set; }
+            public int Kills { get; set; }
+            public int Exp { get; set; }
+        }
+
+        string path = Path.Combine(Application.persistentDataPath, "save.data");
+
+        void Start()
+        {
+            var playerData = new PlayerData();
+
+            playerData.Username = "James";
+            playerData.Kills = 125;
+            playerData.Exp = 777;
+
+            // Creates a YAML-formatted string from the given object.
+            // The string is formatted with a Pascal Case naming convention.
+            var yamlString = Yaml.ToString(playerData, new PascalCaseNamingConvention());
+
+            // An example of an alternate method of saving the YAML-formatted string to a file.
+            System.IO.File.WriteAllText(path, yamlString);
         }
     }
 
