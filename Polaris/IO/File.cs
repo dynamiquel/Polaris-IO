@@ -1,6 +1,6 @@
 ﻿//  This file is part of Polaris-IO - An IO wrapper for Unity.
 //  https://github.com/dynamiquel/Polaris-IO
-//  Copyright (c) 2020 dynamiquel and contributors
+//  Copyright (c) 2020 dynamiquel
 
 //  MIT License
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,6 +23,9 @@
 
 namespace Polaris.IO
 {
+    /// <summary>
+    /// Platform-independent implementation of <see cref="System.IO.File"/>.
+    /// </summary>
     public static class File
     {
         /// <summary>
@@ -32,11 +35,11 @@ namespace Polaris.IO
         /// <returns>True if the file exists at the given file location.</returns>
         public static bool Exists(string fileLocation)
         {
-            #if UNITY_WSA
+#if UNITY_WSA
             return UnityEngine.Windows.File.Exists(fileLocation);
-            #else
+#else
             return System.IO.File.Exists(fileLocation);
-            #endif
+#endif
         }
 
         /// <summary>
@@ -48,16 +51,73 @@ namespace Polaris.IO
         {
             if (Exists(fileLocation))
             {
-                #if UNITY_WSA
+#if UNITY_WSA
                 UnityEngine.Windows.File.Delete(fileLocation);
-                #else
+#else
                 System.IO.File.Delete(fileLocation);
-                #endif
-
+#endif
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Creates a new file, writes the specified byte array to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="content"></param>
+        public static void WriteAllBytes(string fileLocation, byte[] content)
+        {
+#if UNITY_WSA
+            UnityEngine.Windows.File.WriteAllBytes(fileLocation, bytes);
+#else
+            System.IO.File.WriteAllBytes(fileLocation, content);
+#endif
+        }
+        
+        /// <summary>
+        /// Opens a binary file, reads the contents of the file into a byte array, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <returns></returns>
+        public static byte[] ReadAllBytes(string fileLocation)
+        {
+#if UNITY_WSA
+            return UnityEngine.Windows.File.ReadAllBytes(fileLocation);
+#else
+            return System.IO.File.ReadAllBytes(fileLocation);
+#endif
+        }
+
+        /// <summary>
+        /// Creates a new file, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="content"></param>
+        public static void WriteAllText(string fileLocation, string content)
+        {
+#if UNITY_WSA
+            UnityEngine.Windows.File.WriteAllBytes(fileLocation, Encoding.UTF8.GetBytes(content));
+#else
+            System.IO.File.WriteAllText(fileLocation, content);
+#endif
+        }
+        
+        /// <summary>
+        /// Opens a text file, reads all the text in the file into a string, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <returns></returns>
+        public static string ReadAllText(string fileLocation)
+        {
+#if UNITY_WSA
+            return Encoding.UTF8.GetString(UnityEngine.Windows.File.ReadAllBytes(fileLocation));
+#else
+            return System.IO.File.ReadAllText(fileLocation);
+#endif
         }
         
         /// <summary>

@@ -33,7 +33,7 @@ View the **[documentation](https://polaris-io.readthedocs.io/en/latest/)** to le
 ## Prerequisites
 - Unity 2019.3 or later
 - YamlDotNet
-- Json.NET
+- Newtonsoft Json.NET (tested with v8.0.2)
 
 ## Adding to your Unity project
 <ol>
