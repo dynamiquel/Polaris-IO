@@ -1,5 +1,9 @@
 # Polaris IO
+[![Releases](https://img.shields.io/github/release/dynamiquel/Polaris-IO?include_prereleases)](https://github.com/dynamiquel/Polaris-IO/releases)
+![Size](https://img.shields.io/github/languages/code-size/dynamiquel/Polaris-IO)
+
 Polaris is a Game SDK for Unity that provides almost essential features. These features make sure your development time stays in what makes your game special.
+
 
 ## Development notes
 IO is built as close to .NET as possible. This should make it very easy to use in other CLR applications, such as Godot or Unreal CLR.
