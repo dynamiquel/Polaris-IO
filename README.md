@@ -1,6 +1,22 @@
 # Polaris IO
 Polaris is a Game SDK for Unity that provides almost essential features. These features make sure your development time stays in what makes your game special.
 
+## Development notes
+IO is built as close to .NET as possible. This should make it very easy to use in other CLR applications, such as Godot or Unreal CLR.
+
+### JSON/YAML
+By default, all public properties and variables of a given object are serialised and deserialised. Below are ways you can configure this:
+
+#### JSON
+- To exclude a public property or variable: Use the [JsonIgnore] attribute.
+- To include a private variable: Use the [JsonProperty] attribute.
+- To choose an alternate alias for the variable: Use the [JsonProperty(string alias)] attribute.
+- To learn more click [here](https://www.newtonsoft.com/json/help/html/SerializationAttributes.htm).
+
+#### YAML
+- To exclude a public property or variable: Use the [YamlIgnore] attribute.
+- To choose an alternate alias for the variable: Use the [YamlMember(string alias)] attribute.
+
 ## Introduction
 IO is a subset of Polaris that makes it **simpler** to use common IO operations in Unity.
 
