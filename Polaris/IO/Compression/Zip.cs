@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 
 namespace Polaris.IO.Compression
 {
-    public class Zip
+    internal static class Zip
     {
         internal static async Task Compress(Stream inputStream, Stream outputStream)
         {

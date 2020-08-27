@@ -28,7 +28,7 @@ using SevenZip.Compression.LZMA;
 
 namespace Polaris.IO.Compression
 {
-    public class Lzma
+    internal static class Lzma
     {
         internal static void Compress(Stream inputStream, Stream outputStream)
         {

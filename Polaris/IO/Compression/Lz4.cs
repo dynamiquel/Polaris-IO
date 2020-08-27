@@ -28,7 +28,7 @@ using K4os.Compression.LZ4.Streams;
 
 namespace Polaris.IO.Compression
 {
-    public class Lz4
+    internal static class Lz4
     {
         internal static async Task Compress(Stream inputStream, Stream outputStream)
         {
