@@ -50,10 +50,12 @@ I initially designed IO to reduce redundancy in my code and to easily switch bet
 
 View the **[documentation](https://polaris-io.readthedocs.io/en/latest/)** to learn more.
 
-## Prerequisites
+## Dependencies
 - Unity 2019.3 or later
-- YamlDotNet
-- Newtonsoft Json.NET (tested with v8.0.2)
+- [YamlDotNet](https://assetstore.unity.com/packages/tools/integration/yamldotnet-for-unity-36292) (tested with YamlDotNet for Unity v6.1.2)
+- [Newtonsoft Json.NET](https://assetstore.unity.com/packages/tools/input-management/json-net-for-unity-11347) (tested with JSON .NET for Unity v2.0.1 (v8.0.2))
+- [K4os.Compression.LZ4](https://github.com/MiloszKrajewski/K4os.Compression.LZ4) (tested with v1.2.4)
+- [LZMA SDK](https://www.7-zip.org/sdk.html) (tested with v19.00)
 
 ## Adding to your Unity project
 <ol>
