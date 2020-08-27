@@ -32,7 +32,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Polaris.IO
 {
-    public static class Yaml /* : IHumanSerialiser, IDirectSerialiser, IStringSerialiser */
+    public static class Yaml /* : IHumanSerialiser, IStringSerialiser */
     {
         private static INamingConvention GetNamingConvention(NamingConvention namingConvention)
         {
@@ -56,15 +56,43 @@ namespace Polaris.IO
         
         #region Write
 
+        /// <summary>
+        /// Creates a new file, converts the value to YAML, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to YAML.</param>
         public static void Write(string fileLocation, object value) =>
             Write(fileLocation, value, NamingConvention.None, CompressionType.None);
 
+        /// <summary>
+        /// Creates a new file, converts the value to YAML, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to YAML.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
         public static void Write(string fileLocation, object value, CompressionType compressionType) =>
             Write(fileLocation, value, NamingConvention.None, compressionType);
 
+        /// <summary>
+        /// Creates a new file, converts the value to YAML, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to YAML.</param>
+        /// <param name="namingConvention">The naming convention to write in.</param>
         public static void Write(string fileLocation, object value, NamingConvention namingConvention) =>
             Write(fileLocation, value, namingConvention, CompressionType.None);
 
+        /// <summary>
+        /// Creates a new file, converts the value to YAML, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to YAML.</param>
+        /// <param name="namingConvention">The naming convention to write in.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
         public static void Write(string fileLocation, object value, NamingConvention namingConvention, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Yaml);
@@ -74,21 +102,49 @@ namespace Polaris.IO
             Text.Write(fileLocation, yamlBytes, compressionType);
         }
 
+        /// <summary>
+        /// Creates a new file, converts the value to YAML, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to YAML.</param>
         public static Task WriteAsync(string fileLocation, object value) =>
             WriteAsync(fileLocation, value, NamingConvention.None);
 
+        /// <summary>
+        /// Creates a new file, converts the value to YAML, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to YAML.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
         public static Task WriteAsync(string fileLocation, object value, CompressionType compressionType) =>
             WriteAsync(fileLocation, value, NamingConvention.None, compressionType);
 
+        /// <summary>
+        /// Creates a new file, converts the value to YAML, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to YAML.</param>
+        /// <param name="namingConvention">The naming convention to write in.</param>
         public static Task WriteAsync(string fileLocation, object value, NamingConvention namingConvention) =>
             WriteAsync(fileLocation, value, namingConvention, CompressionType.None);
 
+        /// <summary>
+        /// Creates a new file, converts the value to YAML, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to YAML.</param>
+        /// <param name="namingConvention">The naming convention to write in.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
         public static async Task WriteAsync(string fileLocation, object value, NamingConvention namingConvention, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Yaml);
             
             // Fallback.
-            var yamlBytes = GetBytes(value, namingConvention);
+            var yamlBytes = await GetBytesAsync(value, namingConvention).ConfigureAwait(false);
             await Text.WriteAsync(fileLocation, yamlBytes, compressionType).ConfigureAwait(false);
         }
         
@@ -97,15 +153,52 @@ namespace Polaris.IO
 
         #region Read
 
+        /// <summary>
+        /// Opens a YAML text file, parses the text in the file into a single object specified by a
+        /// generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T Read<T>(string fileLocation) =>
             Read<T>(fileLocation, NamingConvention.None);
 
+        /// <summary>
+        /// Opens a YAML text file, parses the text in the file into a single object specified by a
+        /// generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="namingConvention">The naming convention to use.
+        /// Must match the naming convention used to write.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T Read<T>(string fileLocation, NamingConvention namingConvention) =>
             Read<T>(fileLocation, namingConvention, CompressionType.None);
 
+        /// <summary>
+        /// Opens a YAML text file, parses the text in the file into a single object specified by a
+        /// generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T Read<T>(string fileLocation, CompressionType compressionType) =>
             Read<T>(fileLocation, NamingConvention.None, compressionType);
         
+        /// <summary>
+        /// Opens a YAML text file, parses the text in the file into a single object specified by a
+        /// generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="namingConvention">The naming convention to use.
+        /// Must match the naming convention used to write.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T Read<T>(string fileLocation, NamingConvention namingConvention, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Yaml);
@@ -115,15 +208,51 @@ namespace Polaris.IO
             return ReadFromBytes<T>(yamlBytes, namingConvention);
         }
 
+        /// <summary>
+        /// Opens a YAML text file, parses the text in the file into a single object specified by a
+        /// generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static Task<T> ReadAsync<T>(string fileLocation) =>
             ReadAsync<T>(fileLocation, NamingConvention.None);
 
+        /// <summary>
+        /// Opens a YAML text file, parses the text in the file into a single object specified by a
+        /// generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="namingConvention">The naming convention to use.
+        /// Must match the naming convention used to write.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static Task<T> ReadAsync<T>(string fileLocation, NamingConvention namingConvention) =>
             ReadAsync<T>(fileLocation, namingConvention, CompressionType.None);
 
+        /// <summary>
+        /// Opens a YAML text file, parses the text in the file into a single object specified by a
+        /// generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static Task<T> ReadAsync<T>(string fileLocation, CompressionType compressionType) =>
             ReadAsync<T>(fileLocation, NamingConvention.None, compressionType);
         
+        /// <summary>
+        /// Opens a YAML text file, parses the text in the file into a single object specified by a
+        /// generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="namingConvention">The naming convention to use.
+        /// Must match the naming convention used to write.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static async Task<T> ReadAsync<T>(string fileLocation, NamingConvention namingConvention, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Yaml);
@@ -138,9 +267,29 @@ namespace Polaris.IO
 
         #region Try
 
+        /// <summary>
+        /// Attempts to open a YAML text file,
+        /// parse the text in the file into a single object specified by a generic type parameter,
+        /// and then close the file. Catches all exceptions. Returns true if successful.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="result">The object of the specified generic type parameter parsed from JSON.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>Returns true if successful.</returns>
         public static bool TryRead<T>(string fileLocation, out T result) =>
             TryRead(fileLocation, CompressionType.None, out result);
 
+        /// <summary>
+        /// Attempts to open a YAML text file,
+        /// parse the text in the file into a single object specified by a generic type parameter,
+        /// and then close the file. Catches all exceptions. Returns true if successful.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <param name="result">The object of the specified generic type parameter parsed from JSON.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>Returns true if successful.</returns>
         public static bool TryRead<T>(string fileLocation, CompressionType compressionType, out T result)
         {
             try
@@ -155,9 +304,26 @@ namespace Polaris.IO
             }
         }
 
+        /// <summary>
+        /// Attempts to create a new file, convert the value to YAML, write the contents to the file, and then close the file.
+        /// If the target file already exists, it is overwritten.
+        /// Catches all exceptions. Returns true if successful.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <returns>Returns true if successful.</returns>
         public static bool TryWrite(string fileLocation, object value) =>
             TryWrite(fileLocation, value, CompressionType.None);
 
+        /// <summary>
+        /// Attempts to create a new file, convert the value to YAML, write the contents to the file, and then close the file.
+        /// If the target file already exists, it is overwritten.
+        /// Catches all exceptions. Returns true if successful.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns>Returns true if successful.</returns>
         public static bool TryWrite(string fileLocation, object value, CompressionType compressionType)
         {
             try
@@ -176,34 +342,120 @@ namespace Polaris.IO
 
         #region Read Bytes
 
+        /// <summary>
+        /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T ReadFromBytes<T>(byte[] bytes) =>
             ReadFromBytes<T>(bytes, NamingConvention.None);
         
+        /// <summary>
+        /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <param name="namingConvention">The naming convention to use.
+        /// Must match the naming convention used to write.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T ReadFromBytes<T>(byte[] bytes, NamingConvention namingConvention)
         {
             var deserialiser = CreateDeserialiser(GetNamingConvention(namingConvention), true);
+            
             return deserialiser.Deserialize<T>(Encoding.UTF8.GetString(bytes));
         }
 
+        /// <summary>
+        /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T ReadFromBytes<T>(byte[] bytes, CompressionType compressionType) =>
             ReadFromBytes<T>(bytes, NamingConvention.None, compressionType);
         
+        /// <summary>
+        /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <param name="namingConvention">The naming convention to use.
+        /// Must match the naming convention used to write.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T ReadFromBytes<T>(byte[] bytes, NamingConvention namingConvention, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            if (compressionType == CompressionType.None)
+                return ReadFromBytes<T>(bytes, namingConvention);
+
+            var decompressedBytes = Utility.DecompressHelper(bytes, compressionType);
+            
+            return ReadFromBytes<T>(decompressedBytes, namingConvention);
         }
 
+        /// <summary>
+        /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static Task<T> ReadFromBytesAsync<T>(byte[] bytes) =>
             ReadFromBytesAsync<T>(bytes, NamingConvention.None);
         
+        /// <summary>
+        /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <param name="namingConvention">The naming convention to use.
+        /// Must match the naming convention used to write.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static async Task<T> ReadFromBytesAsync<T>(byte[] bytes, NamingConvention namingConvention)
         {
             return await Task.Run(() => ReadFromBytes<T>(bytes, namingConvention)).ConfigureAwait(false);
         }
 
-        public static Task<T> ReadFromBytesAsync<T>(byte[] bytes, CompressionType compressionType)
+        /// <summary>
+        /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
+        public static Task<T> ReadFromBytesAsync<T>(byte[] bytes, CompressionType compressionType) =>
+            ReadFromBytesAsync<T>(bytes, NamingConvention.None, compressionType);
+        
+        /// <summary>
+        /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <param name="namingConvention">The naming convention to use.
+        /// Must match the naming convention used to write.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
+        public static async Task<T> ReadFromBytesAsync<T>(byte[] bytes, NamingConvention namingConvention, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            if (compressionType == CompressionType.None)
+                return await ReadFromBytesAsync<T>(bytes).ConfigureAwait(false);
+
+            var decompressedBytes = await Utility.DecompressHelperAsync(bytes, compressionType).ConfigureAwait(false);
+            
+            return await ReadFromBytesAsync<T>(decompressedBytes, namingConvention).ConfigureAwait(false);
         }
         
         #endregion
@@ -211,14 +463,32 @@ namespace Polaris.IO
 
         #region Get Bytes
 
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a YAML-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <returns>A YAML-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
         public static byte[] GetBytes(object value) => 
             GetBytes(value, NamingConvention.None);
 
-        public static byte[] GetBytes(object value, CompressionType compressionType)
-        {
-            throw new NotImplementedException();
-        }
-        
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a YAML-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns>A YAML-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static byte[] GetBytes(object value, CompressionType compressionType) =>
+            GetBytes(value, NamingConvention.None, compressionType);
+
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a YAML-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <param name="namingConvention">The naming convention to use.</param>
+        /// <returns>A YAML-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
         public static byte[] GetBytes(object value, NamingConvention namingConvention)
         {
             var serialiser = new SerializerBuilder()
@@ -229,28 +499,67 @@ namespace Polaris.IO
             return Encoding.UTF8.GetBytes(serialiser.Serialize(value));
         }
 
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a YAML-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <param name="namingConvention">The naming convention to use.</param>
+        /// <returns>A YAML-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
         public static byte[] GetBytes(object value, NamingConvention namingConvention, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            var bytes = GetBytes(namingConvention);
+
+            return compressionType == CompressionType.None ? bytes : Utility.CompressHelper(bytes, compressionType);
         }
 
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a YAML-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <returns>A YAML-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
         public static Task<byte[]> GetBytesAsync(object value) =>
             GetBytesAsync(value, NamingConvention.None);
 
-        public static Task<byte[]> GetBytesAsync(object value, CompressionType compressionType)
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a YAML-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns>A YAML-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static Task<byte[]> GetBytesAsync(object value, CompressionType compressionType) =>
+            GetBytesAsync(value, NamingConvention.None, compressionType);
         
-        // Doesn't work. Use GetBytes instead.
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a YAML-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <param name="namingConvention">The naming convention to use.</param>
+        /// <returns>A YAML-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
         public static Task<byte[]> GetBytesAsync(object value, NamingConvention namingConvention)
         {
             return Task.Run(() => GetBytes(value, namingConvention));
         }
 
-        public static Task<byte[]> GetBytesAsync(object value, NamingConvention namingConvention, CompressionType compressionType)
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a YAML-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to YAML.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <param name="namingConvention">The naming convention to use.</param>
+        /// <returns>A YAML-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static async Task<byte[]> GetBytesAsync(object value, NamingConvention namingConvention, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            var bytes = await GetBytesAsync(namingConvention).ConfigureAwait(false);
+
+            return compressionType == CompressionType.None
+                ? bytes
+                : await Utility.CompressHelperAsync(bytes, compressionType).ConfigureAwait(false);
         }
         
         #endregion

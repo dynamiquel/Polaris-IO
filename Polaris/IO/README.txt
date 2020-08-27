@@ -29,18 +29,19 @@ LICENSE:
 
 KNOWN ISSUES:
     - Probably not an issue but LZ4 doesn't perform much faster than GZIP.
+    - Yaml can't deserialise the 'textExample' string. Cannot find the exact reason.
+      Seems to be when the '>+' symbol is used.
     
     
 NOT YET TESTED:
-    - Any platform other than 'Windows Standalone'
-    - Pretty much everything
-    - Directory.Create
+    - Any platform other than 'Windows Standalone'.
+    - Yaml has only been lightly tested.
+    - Directory.Create.
 
 
 NOT YET IMPLEMENTED:
-    - Backup system
-    - Any platform support other than 'Standalone' and 'UWP'
-    - Yaml (partially)
-    - Binary
-    - Attributes
-    - Json Naming Conventions: Snake-case and Kebab-case
+    - Backup system.
+    - Any platform support other than 'Standalone' and 'UWP'.
+    - Binary.
+    - Attributes.
+    - Json Naming Conventions: Snake-case and Kebab-case.

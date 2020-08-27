@@ -491,5 +491,36 @@ namespace Polaris.IO
         }
         
         #endregion
+
+
+        /// <summary>
+        /// A direct way of getting the Stream for the given file. Can be used to write or read files.
+        /// Not yet fully implemented.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="fileMode">Use either FileMode.Open or FileMode.Create.</param>
+        /// <returns></returns>
+        public static Stream GetStream(string fileLocation, FileMode fileMode)
+        {
+            Utility.UpdateExtension(ref fileLocation, FileType.Text);
+
+#if UNITY_STANDALONE || UNITY_EDITOR
+            // I would assume this is more efficient due to less byte <-> Stream conversions.
+
+            return new FileStream(fileLocation, fileMode);
+#else
+            // Fallback.
+            if (fileMode == FileMode.Open)
+            {
+                var bytes = ReadAsBytes(fileLocation);
+                return new MemoryStream(bytes);
+            }
+            else if (fileMode == FileMode.Create || fileMode == FileMode.CreateNew)
+            {
+                // dunno
+                throw new NotImplementedException();
+            }
+#endif
+        }
     }
 }
