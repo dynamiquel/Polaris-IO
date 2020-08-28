@@ -22,6 +22,8 @@
 //  SOFTWARE.
 
 using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using Polaris.IO.Compression;
 using System.Threading.Tasks;
 
@@ -31,24 +33,30 @@ namespace Polaris.IO
     {
         #region Write
 
-        public static void Write(string fileLocation, object value)
-        {
-            throw new NotImplementedException();
-        }
+        public static void Write(string fileLocation, object value) =>
+            Write(fileLocation, value, CompressionType.None);
 
         public static void Write(string fileLocation, object value, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            Utility.UpdateExtension(ref fileLocation, FileType.Binary);
+
+            using (var stream = GetStream(value))
+            {
+                Text.Write(fileLocation, stream, compressionType);
+            }
         }
 
-        public static Task WriteAsync(string fileLocation, object value)
-        {
-            throw new NotImplementedException();
-        }
+        public static Task WriteAsync(string fileLocation, object value) =>
+            WriteAsync(fileLocation, value, CompressionType.None);
 
-        public static Task WriteAsync(string fileLocation, object value, CompressionType compressionType)
+        public static async Task WriteAsync(string fileLocation, object value, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            Utility.UpdateExtension(ref fileLocation, FileType.Binary);
+
+            using (var stream = await GetStreamAsync(value).ConfigureAwait(false))
+            {
+                await Text.WriteAsync(fileLocation, stream, compressionType).ConfigureAwait(false);
+            }
         }
 
         #endregion
@@ -56,24 +64,26 @@ namespace Polaris.IO
 
         #region Read
 
-        public static T Read<T>(string fileLocation)
-        {
-            throw new NotImplementedException();
-        }
+        public static T Read<T>(string fileLocation) => 
+            Read<T>(fileLocation, CompressionType.None);
 
         public static T Read<T>(string fileLocation, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            Utility.UpdateExtension(ref fileLocation, FileType.Binary);
+
+            var bytes = Text.ReadAsBytes(fileLocation, compressionType);
+            return FromBytes<T>(bytes);
         }
 
-        public static Task<T> ReadAsync<T>(string fileLocation)
-        {
-            throw new NotImplementedException();
-        }
+        public static Task<T> ReadAsync<T>(string fileLocation) => 
+            ReadAsync<T>(fileLocation, CompressionType.None);
 
-        public static Task<T> ReadAsync<T>(string fileLocation, CompressionType compressionType)
+        public static async Task<T> ReadAsync<T>(string fileLocation, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            Utility.UpdateExtension(ref fileLocation, FileType.Binary);
+
+            var bytes = await Text.ReadAsBytesAsync(fileLocation, compressionType).ConfigureAwait(false);
+            return await FromBytesAsync<T>(bytes).ConfigureAwait(false);
         }
         
         
@@ -82,24 +92,37 @@ namespace Polaris.IO
 
         #region Try
 
-        public static bool TryRead<T>(string fileLocation, out T result)
-        {
-            throw new NotImplementedException();
-        }
+        public static bool TryRead<T>(string fileLocation, out T result) =>
+            TryRead(fileLocation, CompressionType.None, out result);
 
         public static bool TryRead<T>(string fileLocation, CompressionType compressionType, out T result)
         {
-            throw new NotImplementedException();
+            try
+            {
+                result = Read<T>(fileLocation, compressionType);
+                return true;
+            }
+            catch (Exception e)
+            {
+                result = default;
+                return false;
+            }
         }
 
-        public static bool TryWrite(string fileLocation, object value)
-        {
-            throw new NotImplementedException();
-        }
+        public static bool TryWrite(string fileLocation, object value) =>
+            TryWrite(fileLocation, value, CompressionType.None);
 
         public static bool TryWrite(string fileLocation, object value, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            try
+            {
+                Write(fileLocation, value, compressionType);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
         
         #endregion
@@ -107,24 +130,42 @@ namespace Polaris.IO
 
         #region Read Bytes
 
-        public static T ReadFromBytes<T>(byte[] bytes)
+        public static T FromBytes<T>(byte[] bytes)
         {
-            throw new NotImplementedException();
+            using (var stream = new MemoryStream(bytes))
+            {
+                var bf = new BinaryFormatter();
+                return (T)bf.Deserialize(stream);
+            }
         }
 
-        public static T ReadFromBytes<T>(byte[] bytes, CompressionType compressionType)
+        public static T FromBytes<T>(byte[] bytes, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            if (compressionType == CompressionType.None)
+                return FromBytes<T>(bytes);
+            
+            var decompressedBytes = Utility.DecompressHelper(bytes, compressionType);
+            return FromBytes<T>(decompressedBytes);
         }
 
-        public static Task<T> ReadFromBytesAsync<T>(byte[] bytes)
+        // TODO: Make deserialisation async.
+        public static async Task<T> FromBytesAsync<T>(byte[] bytes)
         {
-            throw new NotImplementedException();
+            using (var stream = new MemoryStream(bytes))
+            {
+                var bf = new BinaryFormatter();
+                return (T)bf.Deserialize(stream);
+            }
         }
 
-        public static Task<T> ReadFromBytesAsync<T>(byte[] bytes, CompressionType compressionType)
+        // TODO: Make deserialisation async.
+        public static async Task<T> FromBytesAsync<T>(byte[] bytes, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            if (compressionType == CompressionType.None)
+                return await FromBytesAsync<T>(bytes).ConfigureAwait(false);
+            
+            var decompressedBytes = await Utility.DecompressHelperAsync(bytes, compressionType);
+            return await FromBytesAsync<T>(decompressedBytes).ConfigureAwait(false);
         }
         
         #endregion
@@ -132,51 +173,78 @@ namespace Polaris.IO
 
         #region Get Bytes
 
-        public static byte[] GetBytes(object value)
-        {
-            throw new NotImplementedException();
-        }
+        public static byte[] GetBytes(object value) =>
+            GetStream(value).ToArray();
 
-        public static byte[] GetBytes(object value, CompressionType compressionType)
-        {
-            throw new NotImplementedException();
-        }
+        public static byte[] GetBytes(object value, CompressionType compressionType) =>
+            GetStream(value, compressionType).ToArray();
 
-        public static Task<byte[]> GetBytesAsync(object value)
-        {
-            throw new NotImplementedException();
-        }
+        public static async Task<byte[]> GetBytesAsync(object value) =>
+            (await GetStreamAsync(value).ConfigureAwait(false)).ToArray();
 
-        public static Task<byte[]> GetBytesAsync(object value, CompressionType compressionType)
-        {
-            throw new NotImplementedException();
-        }
+        public static async Task<byte[]> GetBytesAsync(object value, CompressionType compressionType) =>
+            (await GetStreamAsync(value, compressionType).ConfigureAwait(false)).ToArray();
 
         #endregion
-        
-        
-        #region Direct
-        
-        public static void WriteDirect(string fileLocation, object value)
+
+
+        #region Get Stream
+
+        public static MemoryStream GetStream(object value)
         {
-            throw new NotImplementedException();
+            var stream = new MemoryStream();
+            var bf = new BinaryFormatter();
+            bf.Serialize(stream, value);
+
+            return stream;
         }
 
-        public static Task WriteDirectAsync(string fileLocation, object value)
+        public static MemoryStream GetStream(object value, CompressionType compressionType)
         {
-            throw new NotImplementedException();
-        }
+            if (compressionType == CompressionType.None)
+                return GetStream(value);
 
-        public static T ReadDirect<T>(string fileLocation)
-        {
-            throw new NotImplementedException();
-        }
+            var decompressedStream = new MemoryStream();
+            using (var stream = new MemoryStream())
+            {
+                var bf = new BinaryFormatter();
+                bf.Serialize(stream, value);
 
-        public static Task<T> ReadDirectAsync<T>(string fileLocation)
-        {
-            throw new NotImplementedException();
+                Task.Run(() => Compressor.Compress(stream, decompressedStream, compressionType))
+                    .GetAwaiter().GetResult();
+            }
+
+            return decompressedStream;
         }
         
+        // TODO: Make serialisation async.
+        public static async Task<MemoryStream> GetStreamAsync(object value)
+        {
+            var stream = new MemoryStream();
+            var bf = new BinaryFormatter();
+            bf.Serialize(stream, value);
+
+            return stream;
+        }
+
+        // TODO: Make serialisation async.
+        public static async Task<MemoryStream> GetStreamAsync(object value, CompressionType compressionType)
+        {
+            if (compressionType == CompressionType.None)
+                return await GetStreamAsync(value).ConfigureAwait(false);
+
+            var decompressedStream = new MemoryStream();
+            using (var stream = new MemoryStream())
+            {
+                var bf = new BinaryFormatter();
+                bf.Serialize(stream, value);
+
+                await Compressor.Compress(stream, decompressedStream, compressionType).ConfigureAwait(false);
+            }
+
+            return decompressedStream;
+        }
+
         #endregion
     }
 }

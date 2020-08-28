@@ -158,7 +158,6 @@ namespace Polaris.IO
         /// generic type parameter, and then closes the file.
         /// </summary>
         /// <param name="fileLocation"></param>
-        /// Must match the type of compression used to write the file.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
         public static T Read<T>(string fileLocation) =>
@@ -205,7 +204,7 @@ namespace Polaris.IO
 
             // Fallback.
             var yamlBytes = Text.ReadAsBytes(fileLocation, compressionType);
-            return ReadFromBytes<T>(yamlBytes, namingConvention);
+            return FromBytes<T>(yamlBytes, namingConvention);
         }
 
         /// <summary>
@@ -259,7 +258,7 @@ namespace Polaris.IO
             
             // Fallback.
             var yamlBytes = await Text.ReadAsBytesAsync(fileLocation, compressionType).ConfigureAwait(false);
-            return await ReadFromBytesAsync<T>(yamlBytes, namingConvention).ConfigureAwait(false);
+            return await FromBytesAsync<T>(yamlBytes, namingConvention).ConfigureAwait(false);
         }
 
         #endregion
@@ -349,8 +348,8 @@ namespace Polaris.IO
         /// <param name="bytes">The bytes to parse.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static T ReadFromBytes<T>(byte[] bytes) =>
-            ReadFromBytes<T>(bytes, NamingConvention.None);
+        public static T FromBytes<T>(byte[] bytes) =>
+            FromBytes<T>(bytes, NamingConvention.None);
         
         /// <summary>
         /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
@@ -361,7 +360,7 @@ namespace Polaris.IO
         /// Must match the naming convention used to write.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static T ReadFromBytes<T>(byte[] bytes, NamingConvention namingConvention)
+        public static T FromBytes<T>(byte[] bytes, NamingConvention namingConvention)
         {
             var deserialiser = CreateDeserialiser(GetNamingConvention(namingConvention), true);
             
@@ -377,8 +376,8 @@ namespace Polaris.IO
         /// Must match the type of compression used to write the file.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static T ReadFromBytes<T>(byte[] bytes, CompressionType compressionType) =>
-            ReadFromBytes<T>(bytes, NamingConvention.None, compressionType);
+        public static T FromBytes<T>(byte[] bytes, CompressionType compressionType) =>
+            FromBytes<T>(bytes, NamingConvention.None, compressionType);
         
         /// <summary>
         /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
@@ -391,14 +390,14 @@ namespace Polaris.IO
         /// Must match the naming convention used to write.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static T ReadFromBytes<T>(byte[] bytes, NamingConvention namingConvention, CompressionType compressionType)
+        public static T FromBytes<T>(byte[] bytes, NamingConvention namingConvention, CompressionType compressionType)
         {
             if (compressionType == CompressionType.None)
-                return ReadFromBytes<T>(bytes, namingConvention);
+                return FromBytes<T>(bytes, namingConvention);
 
             var decompressedBytes = Utility.DecompressHelper(bytes, compressionType);
             
-            return ReadFromBytes<T>(decompressedBytes, namingConvention);
+            return FromBytes<T>(decompressedBytes, namingConvention);
         }
 
         /// <summary>
@@ -408,8 +407,8 @@ namespace Polaris.IO
         /// <param name="bytes">The bytes to parse.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static Task<T> ReadFromBytesAsync<T>(byte[] bytes) =>
-            ReadFromBytesAsync<T>(bytes, NamingConvention.None);
+        public static Task<T> FromBytesAsync<T>(byte[] bytes) =>
+            FromBytesAsync<T>(bytes, NamingConvention.None);
         
         /// <summary>
         /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
@@ -420,9 +419,9 @@ namespace Polaris.IO
         /// Must match the naming convention used to write.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static async Task<T> ReadFromBytesAsync<T>(byte[] bytes, NamingConvention namingConvention)
+        public static async Task<T> FromBytesAsync<T>(byte[] bytes, NamingConvention namingConvention)
         {
-            return await Task.Run(() => ReadFromBytes<T>(bytes, namingConvention)).ConfigureAwait(false);
+            return await Task.Run(() => FromBytes<T>(bytes, namingConvention)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -434,8 +433,8 @@ namespace Polaris.IO
         /// Must match the type of compression used to write the file.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static Task<T> ReadFromBytesAsync<T>(byte[] bytes, CompressionType compressionType) =>
-            ReadFromBytesAsync<T>(bytes, NamingConvention.None, compressionType);
+        public static Task<T> FromBytesAsync<T>(byte[] bytes, CompressionType compressionType) =>
+            FromBytesAsync<T>(bytes, NamingConvention.None, compressionType);
         
         /// <summary>
         /// Parses the UTF-8 encoded bytes representing a YAML value into an instance of the type specified by
@@ -448,14 +447,14 @@ namespace Polaris.IO
         /// Must match the naming convention used to write.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static async Task<T> ReadFromBytesAsync<T>(byte[] bytes, NamingConvention namingConvention, CompressionType compressionType)
+        public static async Task<T> FromBytesAsync<T>(byte[] bytes, NamingConvention namingConvention, CompressionType compressionType)
         {
             if (compressionType == CompressionType.None)
-                return await ReadFromBytesAsync<T>(bytes).ConfigureAwait(false);
+                return await FromBytesAsync<T>(bytes).ConfigureAwait(false);
 
             var decompressedBytes = await Utility.DecompressHelperAsync(bytes, compressionType).ConfigureAwait(false);
             
-            return await ReadFromBytesAsync<T>(decompressedBytes, namingConvention).ConfigureAwait(false);
+            return await FromBytesAsync<T>(decompressedBytes, namingConvention).ConfigureAwait(false);
         }
         
         #endregion

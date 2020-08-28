@@ -36,6 +36,7 @@ KNOWN ISSUES:
 NOT YET TESTED:
     - Any platform other than 'Windows Standalone'.
     - Yaml has only been lightly tested.
+    - Binary has only been lighty tested.
     - Directory.Create.
 
 
@@ -45,3 +46,4 @@ NOT YET IMPLEMENTED:
     - Binary.
     - Attributes.
     - Json Naming Conventions: Snake-case and Kebab-case.
+    - Binary documentation.

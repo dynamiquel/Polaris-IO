@@ -72,7 +72,7 @@ namespace Polaris.IO
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Binary);
 
-            using (var stream = Text.GetStream(fileLocation, FileMode.Create))
+            using (var stream = Text.GetStream(fileLocation))
             {
                 MessagePackSerializer.Serialize(stream, value);
             }
@@ -102,7 +102,7 @@ namespace Polaris.IO
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Binary);
 
-            using (var stream = Text.GetStream(fileLocation, FileMode.Open))
+            using (var stream = Text.GetStream(fileLocation))
             {
                 return MessagePackSerializer.Deserialize<T>(stream);
             }

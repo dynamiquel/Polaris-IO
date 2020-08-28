@@ -174,7 +174,7 @@ namespace Polaris.IO
             Utility.UpdateExtension(ref fileLocation, FileType.Json);
 
             var jsonBytes = Text.ReadAsBytes(fileLocation, compressionType);
-            return ReadFromBytes<T>(jsonBytes);
+            return FromBytes<T>(jsonBytes);
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace Polaris.IO
 
             // Fallback.
             var jsonBytes = await Text.ReadAsBytesAsync(fileLocation, compressionType).ConfigureAwait(false);
-            return await ReadFromBytesAsync<T>(jsonBytes).ConfigureAwait(false);
+            return await FromBytesAsync<T>(jsonBytes).ConfigureAwait(false);
         }
 
         #endregion
@@ -236,7 +236,7 @@ namespace Polaris.IO
             try
             {
                 var jsonBytes = Text.ReadAsBytes(fileLocation);
-                result = ReadFromBytes<T>(jsonBytes, compressionType);
+                result = FromBytes<T>(jsonBytes, compressionType);
                 return true;
             }
             catch (Exception e)
@@ -308,7 +308,7 @@ namespace Polaris.IO
         /// <param name="bytes">The bytes to parse.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static T ReadFromBytes<T>(byte[] bytes)
+        public static T FromBytes<T>(byte[] bytes)
         {
             //return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes));
 
@@ -328,12 +328,12 @@ namespace Polaris.IO
         /// Must match the type of compression used to write the file.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static T ReadFromBytes<T>(byte[] bytes, CompressionType compressionType)
+        public static T FromBytes<T>(byte[] bytes, CompressionType compressionType)
         {
             if (compressionType == CompressionType.None)
-                return ReadFromBytes<T>(bytes);
+                return FromBytes<T>(bytes);
             
-            //return ReadFromBytes<T>(Utility.DecompressHelper(bytes, compressionType));
+            //return FromBytes<T>(Utility.DecompressHelper(bytes, compressionType));
             
             using (var decompressedStream = new MemoryStream())
             {
@@ -354,9 +354,9 @@ namespace Polaris.IO
         /// <param name="bytes">The bytes to parse.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static async Task<T> ReadFromBytesAsync<T>(byte[] bytes)
+        public static async Task<T> FromBytesAsync<T>(byte[] bytes)
         {
-            return await Task.Run(() => ReadFromBytes<T>(bytes)).ConfigureAwait(false);
+            return await Task.Run(() => FromBytes<T>(bytes)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -368,10 +368,10 @@ namespace Polaris.IO
         /// Must match the type of compression used to write the file.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static async Task<T> ReadFromBytesAsync<T>(byte[] bytes, CompressionType compressionType)
+        public static async Task<T> FromBytesAsync<T>(byte[] bytes, CompressionType compressionType)
         {
             if (compressionType == CompressionType.None)
-                return await ReadFromBytesAsync<T>(bytes).ConfigureAwait(false);
+                return await FromBytesAsync<T>(bytes).ConfigureAwait(false);
             
             using (var decompressedStream = new MemoryStream())
             {
@@ -408,6 +408,12 @@ namespace Polaris.IO
             }
         }
 
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
         public static byte[] GetBytes(object value) =>
             GetBytes(value, NamingConvention.None);
 
@@ -530,7 +536,7 @@ namespace Polaris.IO
 
         #region Read String
         
-        // Simply converts string <-> byte[] using Encoding.UTF8. ReadFromBytes and GetBytes is preferred.
+        // Simply converts string <-> byte[] using Encoding.UTF8. FromBytes and GetBytes is preferred.
 
         /// <summary>
         /// Parses the string representing a JSON value into an instance of the type specified by
@@ -539,30 +545,8 @@ namespace Polaris.IO
         /// <param name="content">The JSON-formatted string to parse and create an object from.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static T ReadFromString<T>(string content) =>
-            ReadFromBytes<T>(Encoding.UTF8.GetBytes(content));
-
-        /// <summary>
-        /// Parses the string representing a JSON value into an instance of the type specified by
-        /// a generic type parameter.
-        /// </summary>
-        /// <param name="content">The JSON-formatted string to parse and create an object from.</param>
-        /// <param name="compressionType">The type of decompression to use.
-        /// Must match the type of compression used to write the file.</param>
-        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
-        /// <returns>An instance of the specified generic type parameter.</returns>
-        public static T ReadFromString<T>(string content, CompressionType compressionType) =>
-            ReadFromBytes<T>(Encoding.UTF8.GetBytes(content), compressionType);
-
-        /// <summary>
-        /// Parses the string representing a JSON value into an instance of the type specified by
-        /// a generic type parameter.
-        /// </summary>
-        /// <param name="content">The JSON-formatted string to parse and create an object from.</param>
-        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
-        /// <returns>An instance of the specified generic type parameter.</returns>
-        public static Task<T> ReadFromStringAsync<T>(string content) =>
-            ReadFromBytesAsync<T>(Encoding.UTF8.GetBytes(content));
+        public static T FromString<T>(string content) =>
+            FromBytes<T>(Encoding.UTF8.GetBytes(content));
 
         /// <summary>
         /// Parses the string representing a JSON value into an instance of the type specified by
@@ -573,15 +557,37 @@ namespace Polaris.IO
         /// Must match the type of compression used to write the file.</param>
         /// <typeparam name="T">The type of object to create an instance of.</typeparam>
         /// <returns>An instance of the specified generic type parameter.</returns>
-        public static Task<T> ReadFromStringAsync<T>(string content, CompressionType compressionType) =>
-            ReadFromBytesAsync<T>(Encoding.UTF8.GetBytes(content), compressionType);
+        public static T FromString<T>(string content, CompressionType compressionType) =>
+            FromBytes<T>(Encoding.UTF8.GetBytes(content), compressionType);
+
+        /// <summary>
+        /// Parses the string representing a JSON value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="content">The JSON-formatted string to parse and create an object from.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
+        public static Task<T> FromStringAsync<T>(string content) =>
+            FromBytesAsync<T>(Encoding.UTF8.GetBytes(content));
+
+        /// <summary>
+        /// Parses the string representing a JSON value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="content">The JSON-formatted string to parse and create an object from.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
+        public static Task<T> FromStringAsync<T>(string content, CompressionType compressionType) =>
+            FromBytesAsync<T>(Encoding.UTF8.GetBytes(content), compressionType);
         
         #endregion
 
 
         #region Get String
         
-        // Simply converts string <-> byte[] using Encoding.UTF8. ReadFromBytes and GetBytes is preferred.
+        // Simply converts string <-> byte[] using Encoding.UTF8. FromBytes and GetBytes is preferred.
 
         /// <summary>
         /// Converts the value of a type specified by a generic type parameter into a JSON-formatted string.

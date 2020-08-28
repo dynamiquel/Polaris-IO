@@ -42,7 +42,7 @@ namespace Polaris.IO
         public static void Write(string fileLocation, string content)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Text);
-            
+
             File.WriteAllText(fileLocation, content);
         }
 
@@ -70,10 +70,11 @@ namespace Polaris.IO
         public static async Task WriteAsync(string fileLocation, string content)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Text);
-            
+
 #if UNITY_WSA
                 var folder = await Windows.Storage.StorageFolder.GetFolderFromPathAsync(fileLocation);
-                var file = await folder.CreateFileAsync(fileLocation, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+                var file =
+ await folder.CreateFileAsync(fileLocation, Windows.Storage.CreationCollisionOption.ReplaceExisting);
                 await Windows.Storage.FileIO.WriteTextAsync(file, content);
 #else
             using (var sw = new StreamWriter(fileLocation, false))
@@ -125,7 +126,7 @@ namespace Polaris.IO
         {
             if (compressionType == CompressionType.None)
                 return Read(fileLocation);
-            
+
             return Encoding.UTF8.GetString(ReadAsBytes(fileLocation, compressionType));
         }
 
@@ -137,7 +138,7 @@ namespace Polaris.IO
         public static async Task<string> ReadAsync(string fileLocation)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Text);
-            
+
 #if UNITY_WSA
             var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(fileLocation);
             return await Windows.Storage.FileIO.ReadTextAsync(file);
@@ -159,13 +160,13 @@ namespace Polaris.IO
         {
             if (compressionType == CompressionType.None)
                 return await ReadAsync(fileLocation).ConfigureAwait(false);
-                    
+
             return Encoding.UTF8.GetString(await ReadAsBytesAsync(fileLocation, compressionType).ConfigureAwait(false));
         }
 
         #endregion
-        
-        
+
+
         #region Write As Bytes
 
         /// <summary>
@@ -174,12 +175,8 @@ namespace Polaris.IO
         /// </summary>
         /// <param name="fileLocation"></param>
         /// <param name="content">The bytes to write to the file.</param>
-        public static void Write(string fileLocation, byte[] content)
-        {
-            Utility.UpdateExtension(ref fileLocation, FileType.Text);
-            
-            File.WriteAllBytes(fileLocation, content);
-        }
+        public static void Write(string fileLocation, byte[] content) =>
+            Write(fileLocation, new MemoryStream(content));
 
         /// <summary>
         /// Creates a new file, compresses the specified byte array and writes it to the file, and then closes the file.
@@ -188,29 +185,8 @@ namespace Polaris.IO
         /// <param name="fileLocation"></param>
         /// <param name="content">The bytes to write to the file.</param>
         /// <param name="compressionType">The type of compression to use.</param>
-        public static void Write(string fileLocation, byte[] content, CompressionType compressionType)
-        {
-            if (compressionType == CompressionType.None)
-            {
-                Write(fileLocation, content);
-                return;
-            }
-            
-#if UNITY_STANDALONE || UNITY_EDITOR
-            // I would assume this is more efficient due to less byte <-> Stream conversions.
-            Utility.UpdateExtension(ref fileLocation, FileType.Text);
-
-            using (var outputStream = new FileStream(fileLocation, FileMode.Create))
-            using (var inputStream = new MemoryStream(content))
-            {
-                // Forces the code to run synchronously.
-                Task.Run(() => Compressor.Compress(inputStream, outputStream, compressionType)).GetAwaiter().GetResult();
-            }
-#else
-            // Fallback.
-            Write(fileLocation, Utility.CompressHelper(content, compressionType));
-#endif
-        }
+        public static void Write(string fileLocation, byte[] content, CompressionType compressionType) =>
+            Write(fileLocation, new MemoryStream(content), compressionType);
 
         /// <summary>
         /// Creates a new file, writes the specified byte array to the file, and then closes the file.
@@ -218,22 +194,8 @@ namespace Polaris.IO
         /// </summary>
         /// <param name="fileLocation"></param>
         /// <param name="content">The bytes to write to the file.</param>
-        public static async Task WriteAsync(string fileLocation, byte[] content)
-        {
-            Utility.UpdateExtension(ref fileLocation, FileType.Text);
-
-#if UNITY_WSA
-                var folder = await Windows.Storage.StorageFolder.GetFolderFromPathAsync(fileLocation);
-                var file = await folder.CreateFileAsync(fileLocation, Windows.Storage.CreationCollisionOption.ReplaceExisting);
-                await Windows.Storage.FileIO.WriteBytesAsync(file, content);
-#else
-            using (FileStream outputStream = System.IO.File.Create(fileLocation))
-            {
-                //outputStream.Seek(0, SeekOrigin.End);
-                await outputStream.WriteAsync(content, 0, content.Length).ConfigureAwait(false);
-            }
-#endif
-        }
+        public static Task WriteAsync(string fileLocation, byte[] content) =>
+            WriteAsync(fileLocation, new MemoryStream(content));
 
         /// <summary>
         /// Creates a new file, compresses the specified byte array and writes it to the file, and then closes the file.
@@ -241,33 +203,13 @@ namespace Polaris.IO
         /// </summary>
         /// <param name="fileLocation"></param>
         /// <param name="content">The bytes to write to the file.</param>
-        public static async Task WriteAsync(string fileLocation, byte[] content, CompressionType compressionType)
-        {
-            if (compressionType == CompressionType.None)
-            {
-                await WriteAsync(fileLocation, content).ConfigureAwait(false);
-                return;
-            }
-            
-#if UNITY_STANDALONE || UNITY_EDITOR
-            // I would assume this is more efficient due to less byte <-> Stream conversions.
-            Utility.UpdateExtension(ref fileLocation, FileType.Text);
-
-            using (var outputStream = new FileStream(fileLocation, FileMode.Create))
-            using (var inputStream = new MemoryStream(content))
-            {
-                await Compressor.Compress(inputStream, outputStream, compressionType).ConfigureAwait(false);
-            }
-#else
-            // Fallback.
-            var bytes = await Utility.CompressHelperAsync(content, compressionType).ConfigureAwait(false);
-            await WriteAsync(fileLocation, bytes).ConfigureAwait(false);
-#endif
-        }
+        /// <param name="compressionType"></param>
+        public static Task WriteAsync(string fileLocation, byte[] content, CompressionType compressionType) =>
+            WriteAsync(fileLocation, new MemoryStream(content), compressionType);
 
         #endregion
-        
-        
+
+
         #region Read As Bytes
 
         /// <summary>
@@ -294,7 +236,7 @@ namespace Polaris.IO
         {
             if (compressionType == CompressionType.None)
                 return ReadAsBytes(fileLocation);
-            
+
 #if UNITY_STANDALONE || UNITY_EDITOR
             // I would assume this is more efficient due to less byte <-> Stream conversions.
             Utility.UpdateExtension(ref fileLocation, FileType.Text);
@@ -303,7 +245,8 @@ namespace Polaris.IO
             using (var inputStream = new FileStream(fileLocation, FileMode.Open))
             {
                 // Forces the code to run synchronously.
-                Task.Run(() => Compressor.Decompress(inputStream, outputStream, compressionType)).GetAwaiter().GetResult();
+                Task.Run(() => Compressor.Decompress(inputStream, outputStream, compressionType)).GetAwaiter()
+                    .GetResult();
                 return outputStream.ToArray();
             }
 #else
@@ -330,7 +273,7 @@ namespace Polaris.IO
             using (FileStream inputStream = System.IO.File.Open(fileLocation, FileMode.Open))
             {
                 result = new byte[inputStream.Length];
-                await inputStream.ReadAsync(result, 0, (int)inputStream.Length).ConfigureAwait(false);
+                await inputStream.ReadAsync(result, 0, (int) inputStream.Length).ConfigureAwait(false);
             }
 
             return result;
@@ -348,7 +291,7 @@ namespace Polaris.IO
         {
             if (compressionType == CompressionType.None)
                 return await ReadAsBytesAsync(fileLocation).ConfigureAwait(false);
-            
+
 #if UNITY_STANDALONE || UNITY_EDITOR
             // I would assume this is more efficient due to less byte <-> Stream conversions.
             Utility.UpdateExtension(ref fileLocation, FileType.Text);
@@ -363,6 +306,127 @@ namespace Polaris.IO
             // Fallback.
             var bytes = await ReadAsBytesAsync(fileLocation).ConfigureAwait(false);
             return await Utility.DecompressHelperAsync(bytes, compressionType).ConfigureAwait(false);
+#endif
+        }
+
+        #endregion
+
+
+        #region Write As Stream
+
+        // Using these methods are preferred when the data is already in a Stream.
+        // Using MemoryStream.ToArray() duplicates the data, and is unnecessary as it gets converted back to a
+        // Stream anyways.
+
+        /// <summary>
+        /// Creates a new file, writes the specified stream to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="inputStream">The stream to write to the file.</param>
+        public static void Write(string fileLocation, MemoryStream inputStream)
+        {
+            Utility.UpdateExtension(ref fileLocation, FileType.Text);
+
+#if UNITY_STANDALONE || UNITY_EDITOR
+            using (var outputStream = new FileStream(fileLocation, FileMode.Create))
+            {
+                // Resets the position.
+                inputStream.Position = 0;
+                inputStream.CopyTo(outputStream);
+            }
+#else
+            // Fallback.
+            File.WriteAllBytes(fileLocation, inputStream.ToArray());
+#endif
+        }
+
+        /// <summary>
+        /// Creates a new file, compresses the specified stream and writes it to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="inputStream">The stream to write to the file.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        public static void Write(string fileLocation, MemoryStream inputStream, CompressionType compressionType)
+        {
+            if (compressionType == CompressionType.None)
+            {
+                Write(fileLocation, inputStream);
+                return;
+            }
+
+            Utility.UpdateExtension(ref fileLocation, FileType.Text);
+
+#if UNITY_STANDALONE || UNITY_EDITOR
+            using (var outputStream = new FileStream(fileLocation, FileMode.Create))
+            {
+                inputStream.Position = 0;
+                
+                // Forces the code to run synchronously.
+                Task.Run(() => Compressor.Compress(inputStream, outputStream, compressionType)).GetAwaiter()
+                    .GetResult();
+            }
+#else
+            // Fallback.
+            File.WriteAllBytes(fileLocation, Utility.CompressHelper(inputStream.ToArray(), compressionType));
+#endif
+        }
+
+        /// <summary>
+        /// Creates a new file, writes the specified stream to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="inputStream">The stream to write to the file.</param>
+        public static async Task WriteAsync(string fileLocation, MemoryStream inputStream)
+        {
+            Utility.UpdateExtension(ref fileLocation, FileType.Text);
+
+#if UNITY_WSA
+                var folder =
+ await Windows.Storage.StorageFolder.GetFolderFromPathAsync(fileLocation).ConfigureAwait(false);
+                var file =
+ await folder.CreateFileAsync(fileLocation, Windows.Storage.CreationCollisionOption.ReplaceExisting).ConfigureAwait(false);
+                await Windows.Storage.FileIO.WriteBytesAsync(file, inputStream.ToArray()).ConfigureAwait(false);
+#else
+            using (FileStream outputStream = System.IO.File.Create(fileLocation))
+            {
+                inputStream.Position = 0;
+                await inputStream.CopyToAsync(outputStream).ConfigureAwait(false);
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Creates a new file, compresses the specified stream and writes it to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="inputStream">The stream to write to the file.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        public static async Task WriteAsync(string fileLocation, MemoryStream inputStream,
+            CompressionType compressionType)
+        {
+            if (compressionType == CompressionType.None)
+            {
+                await WriteAsync(fileLocation, inputStream).ConfigureAwait(false);
+                return;
+            }
+
+            Utility.UpdateExtension(ref fileLocation, FileType.Text);
+
+#if UNITY_STANDALONE || UNITY_EDITOR
+            // I would assume this is more efficient due to less byte <-> Stream conversions.
+            using (var outputStream = new FileStream(fileLocation, FileMode.Create))
+            {
+                inputStream.Position = 0;
+                await Compressor.Compress(inputStream, outputStream, compressionType).ConfigureAwait(false);
+            }
+#else
+            // Fallback.
+            var bytes = await Utility.CompressHelperAsync(inputStream.ToArray(), compressionType).ConfigureAwait(false);
+            await WriteAsync(fileLocation, bytes).ConfigureAwait(false);
 #endif
         }
 
@@ -436,8 +500,8 @@ namespace Polaris.IO
         }
 
         #endregion
-        
-        
+
+
         #region Replace
 
         /// <summary>
@@ -449,7 +513,7 @@ namespace Polaris.IO
         /// <param name="to">The contents to replace with.</param>
         public static void Replace(string fileLocation, string from, string to) =>
             Replace(fileLocation, from, to, CompressionType.None);
-        
+
         /// <summary>
         /// Opens up a file and replaces all occurrences of a specified string with another specified string.
         /// The changes are then saved.
@@ -474,7 +538,7 @@ namespace Polaris.IO
         /// <param name="to">The contents to replace with.</param>
         public static Task ReplaceAsync(string fileLocation, string from, string to) =>
             ReplaceAsync(fileLocation, from, to, CompressionType.None);
-        
+
         /// <summary>
         /// Opens up a file and replaces all occurrences of a specified string with another specified string.
         /// The changes are then saved.
@@ -483,44 +547,25 @@ namespace Polaris.IO
         /// <param name="from">The contents to be replaced.</param>
         /// <param name="to">The contents to replace with.</param>
         /// <param name="compressionType">The type of compression and decompression to use.</param>
-        public static async Task ReplaceAsync(string fileLocation, string from, string to, CompressionType compressionType)
+        public static async Task ReplaceAsync(string fileLocation, string from, string to,
+            CompressionType compressionType)
         {
             var contents = await ReadAsync(fileLocation, compressionType).ConfigureAwait(false);
             contents = contents.Replace(from, to);
             await WriteAsync(fileLocation, contents, compressionType).ConfigureAwait(false);
         }
-        
+
         #endregion
 
 
         /// <summary>
-        /// A direct way of getting the Stream for the given file. Can be used to write or read files.
-        /// Not yet fully implemented.
+        /// Return the contents of the given file as a MemoryStream instead of a string or bytes.
         /// </summary>
         /// <param name="fileLocation"></param>
-        /// <param name="fileMode">Use either FileMode.Open or FileMode.Create.</param>
         /// <returns></returns>
-        public static Stream GetStream(string fileLocation, FileMode fileMode)
+        public static MemoryStream GetStream(string fileLocation)
         {
-            Utility.UpdateExtension(ref fileLocation, FileType.Text);
-
-#if UNITY_STANDALONE || UNITY_EDITOR
-            // I would assume this is more efficient due to less byte <-> Stream conversions.
-
-            return new FileStream(fileLocation, fileMode);
-#else
-            // Fallback.
-            if (fileMode == FileMode.Open)
-            {
-                var bytes = ReadAsBytes(fileLocation);
-                return new MemoryStream(bytes);
-            }
-            else if (fileMode == FileMode.Create || fileMode == FileMode.CreateNew)
-            {
-                // dunno
-                throw new NotImplementedException();
-            }
-#endif
+            return new MemoryStream(ReadAsBytes(fileLocation));
         }
     }
 }
