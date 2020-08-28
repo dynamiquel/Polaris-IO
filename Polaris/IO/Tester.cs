@@ -118,11 +118,12 @@ namespace Polaris.IO
             
             try
             {
-                Json.Write(Path.Combine(path, "json"), testObject, CompressionType.Lz4);
+                Json.Write(Path.Combine(path, "json"), testObject, CompressionType.None);
                 return new TestResult(true, sw.Elapsed);
             }
             catch (Exception e)
             {
+                throw e;
                 return new TestResult(false, sw.Elapsed);
             }
         }
@@ -131,7 +132,7 @@ namespace Polaris.IO
         {
             sw.Restart();
 
-            var content = Json.Read<TestObject>(Path.Combine(path, "json"), CompressionType.Lz4);
+            var content = Json.Read<TestObject>(Path.Combine(path, "json"), CompressionType.None);
 
             return new TestResult(content.Equals(testObject), sw.Elapsed);
         }

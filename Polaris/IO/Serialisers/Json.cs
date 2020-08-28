@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Polaris.IO.Compression;
+using UnityEngine.Rendering.VirtualTexturing;
 
 namespace Polaris.IO
 {
@@ -97,8 +98,10 @@ namespace Polaris.IO
             Utility.UpdateExtension(ref fileLocation, FileType.Json);
 
             // Fallback.
-            var jsonBytes = GetBytes(value, namingConvention);
-            Text.Write(fileLocation, jsonBytes, compressionType);
+            using (var jsonStream = GetStream(value, namingConvention))
+            {
+                Text.Write(fileLocation, jsonStream, compressionType);
+            }
         }
 
         /// <summary>
@@ -143,8 +146,10 @@ namespace Polaris.IO
             Utility.UpdateExtension(ref fileLocation, FileType.Json);
 
             // Fallback.
-            var jsonBytes = await GetBytesAsync(value, namingConvention);
-            await Text.WriteAsync(fileLocation, jsonBytes, compressionType).ConfigureAwait(false);
+            using (var jsonStream = await GetStreamAsync(value, namingConvention).ConfigureAwait(false))
+            {
+                await Text.WriteAsync(fileLocation, jsonStream, compressionType).ConfigureAwait(false);
+            }
         }
         
         #endregion
@@ -270,8 +275,8 @@ namespace Polaris.IO
         {
             try
             {
-                var jsonBytes = GetBytes(value);
-                Text.Write(fileLocation, jsonBytes, compressionType);
+                var jsonStream = GetStream(value);
+                Text.Write(fileLocation, jsonStream, compressionType);
                 return true;
             }
             catch (Exception e)
@@ -310,9 +315,6 @@ namespace Polaris.IO
         /// <returns>An instance of the specified generic type parameter.</returns>
         public static T FromBytes<T>(byte[] bytes)
         {
-            //return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(bytes));
-
-            // I believe this should be more performant due to no byte -> string conversion.
             using (var stream = new MemoryStream(bytes))
             {
                 return Deserialise_Internal<T>(stream);
@@ -332,8 +334,6 @@ namespace Polaris.IO
         {
             if (compressionType == CompressionType.None)
                 return FromBytes<T>(bytes);
-            
-            //return FromBytes<T>(Utility.DecompressHelper(bytes, compressionType));
             
             using (var decompressedStream = new MemoryStream())
             {
@@ -392,11 +392,12 @@ namespace Polaris.IO
         /// <summary>
         /// Writes the JSON data for the given object into the given Stream.
         /// </summary>
-        /// <param name="inputStream"></param>
+        /// <param name="outputStream"></param>
         /// <param name="value"></param>
-        private static void Serialise_Internal(Stream inputStream, object value, NamingConvention namingConvention = NamingConvention.None)
+        private static void Serialise_Internal(Stream outputStream, object value, NamingConvention namingConvention = NamingConvention.None)
         {
-            using (var streamWriter = new StreamWriter(inputStream, Encoding.UTF8))
+            // Input stream needs to stay open so it can be accessed later.
+            using (var streamWriter = new StreamWriter(outputStream, Encoding.UTF8, 4096, true))
             using (JsonWriter jsonWriter = new JsonTextWriter(streamWriter))
             {
                 var jsonSerialiser = new JsonSerializer
@@ -415,7 +416,7 @@ namespace Polaris.IO
         /// <param name="value">The object to parse to JSON.</param>
         /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
         public static byte[] GetBytes(object value) =>
-            GetBytes(value, NamingConvention.None);
+            GetStream(value).ToArray();
 
         /// <summary>
         /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
@@ -425,7 +426,7 @@ namespace Polaris.IO
         /// <param name="compressionType">The type of compression to use.</param>
         /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
         public static byte[] GetBytes(object value, CompressionType compressionType) =>
-            GetBytes(value, NamingConvention.None, compressionType);
+            GetStream(value, compressionType).ToArray();
 
         /// <summary>
         /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
@@ -434,18 +435,8 @@ namespace Polaris.IO
         /// <param name="value">The object to parse to JSON.</param>
         /// <param name="namingConvention">The naming convention to write in.</param>
         /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
-        public static byte[] GetBytes(object value, NamingConvention namingConvention)
-        {
-            /*var jsonString = JsonConvert.SerializeObject(value);
-            return Encoding.UTF8.GetBytes(jsonString);*/
-            
-            using (var stream = new MemoryStream())
-            {
-                Serialise_Internal(stream, value, namingConvention);
-                
-                return stream.ToArray();
-            }
-        }
+        public static byte[] GetBytes(object value, NamingConvention namingConvention) =>
+            GetStream(value, namingConvention).ToArray();
 
         /// <summary>
         /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
@@ -455,24 +446,9 @@ namespace Polaris.IO
         /// <param name="compressionType">The type of compression to use.</param>
         /// <param name="namingConvention">The naming convention to write in.</param>
         /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
-        public static byte[] GetBytes(object value, NamingConvention namingConvention, CompressionType compressionType)
-        {
-            if (compressionType == CompressionType.None)
-                return GetBytes(value, namingConvention);
-                
-            using (var decompressedStream = new MemoryStream())
-            {
-                Serialise_Internal(decompressedStream, value, namingConvention);
-
-                using (var compressedStream = new MemoryStream())
-                {
-                    Task.Run(() =>
-                        Compressor.Compress(decompressedStream, compressedStream, compressionType)).GetAwaiter().GetResult();
-                    
-                    return compressedStream.ToArray();
-                }
-            }
-        }
+        public static byte[] GetBytes(object value, NamingConvention namingConvention,
+            CompressionType compressionType) =>
+            GetStream(value, namingConvention, compressionType).ToArray();
 
         /// <summary>
         /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
@@ -480,8 +456,8 @@ namespace Polaris.IO
         /// </summary>
         /// <param name="value">The object to parse to JSON.</param>
         /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
-        public static Task<byte[]> GetBytesAsync(object value) =>
-            GetBytesAsync(value, NamingConvention.None);
+        public static async Task<byte[]> GetBytesAsync(object value) =>
+            (await GetStreamAsync(value).ConfigureAwait(false)).ToArray();
 
         /// <summary>
         /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
@@ -490,8 +466,8 @@ namespace Polaris.IO
         /// <param name="value">The object to parse to JSON.</param>
         /// <param name="compressionType">The type of compression to use.</param>
         /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
-        public static Task<byte[]> GetBytesAsync(object value, CompressionType compressionType) =>
-            GetBytesAsync(value, NamingConvention.None, compressionType);
+        public static async Task<byte[]> GetBytesAsync(object value, CompressionType compressionType) =>
+            (await GetStreamAsync(value, compressionType).ConfigureAwait(false)).ToArray();
         
         /// <summary>
         /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
@@ -500,9 +476,57 @@ namespace Polaris.IO
         /// <param name="value">The object to parse to JSON.</param>
         /// <param name="namingConvention">The naming convention to write in.</param>
         /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
-        public static async Task<byte[]> GetBytesAsync(object value, NamingConvention namingConvention)
+        public static async Task<byte[]> GetBytesAsync(object value, NamingConvention namingConvention) =>
+            (await GetStreamAsync(value, namingConvention).ConfigureAwait(false)).ToArray();
+
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <param name="namingConvention">The naming convention to write in.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static async Task<byte[]> GetBytesAsync(object value, NamingConvention namingConvention, CompressionType compressionType) =>
+            (await GetStreamAsync(value, namingConvention, compressionType).ConfigureAwait(false)).ToArray();
+        
+        #endregion
+
+
+        #region Get Stream
+
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static MemoryStream GetStream(object value) =>
+            GetStream(value, NamingConvention.None);
+
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static MemoryStream GetStream(object value, CompressionType compressionType) =>
+            GetStream(value, NamingConvention.None, compressionType);
+
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <param name="namingConvention">The naming convention to write in.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static MemoryStream GetStream(object value, NamingConvention namingConvention)
         {
-            return await Task.Run(() => GetBytes(value, namingConvention)).ConfigureAwait(false);
+            var stream = new MemoryStream();
+            Serialise_Internal(stream, value, namingConvention);
+
+            return stream;
         }
 
         /// <summary>
@@ -513,24 +537,78 @@ namespace Polaris.IO
         /// <param name="compressionType">The type of compression to use.</param>
         /// <param name="namingConvention">The naming convention to write in.</param>
         /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
-        public static async Task<byte[]> GetBytesAsync(object value, NamingConvention namingConvention, CompressionType compressionType)
+        public static MemoryStream GetStream(object value, NamingConvention namingConvention, CompressionType compressionType)
         {
             if (compressionType == CompressionType.None)
-                return await GetBytesAsync(value).ConfigureAwait(false);
-            
+                return GetStream(value, namingConvention);
+                
+            var compressedStream = new MemoryStream();
             using (var decompressedStream = new MemoryStream())
             {
                 Serialise_Internal(decompressedStream, value, namingConvention);
 
-                using (var compressedStream = new MemoryStream())
-                {
-                    await Compressor.Compress(decompressedStream, compressedStream, compressionType).ConfigureAwait(false);
-                    
-                    return compressedStream.ToArray();
-                }
+                Task.Run(() =>
+                    Compressor.Compress(decompressedStream, compressedStream, compressionType)).GetAwaiter().GetResult();
             }
+            
+            return compressedStream;
         }
+
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static Task<MemoryStream> GetStreamAsync(object value) =>
+            GetStreamAsync(value, NamingConvention.None);
+
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static Task<MemoryStream> GetStreamAsync(object value, CompressionType compressionType) =>
+            GetStreamAsync(value, NamingConvention.None, compressionType);
         
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <param name="namingConvention">The naming convention to write in.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static async Task<MemoryStream> GetStreamAsync(object value, NamingConvention namingConvention)
+        {
+            return await Task.Run(() => GetStream(value, namingConvention)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a JSON-formatted array of UTF-8
+        /// encoded bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to JSON.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <param name="namingConvention">The naming convention to write in.</param>
+        /// <returns>A JSON-formatted UTF-8 encoded array of bytes, parsed from the given object.</returns>
+        public static async Task<MemoryStream> GetStreamAsync(object value, NamingConvention namingConvention, CompressionType compressionType)
+        {
+            if (compressionType == CompressionType.None)
+                return await GetStreamAsync(value).ConfigureAwait(false);
+
+            var compressedStream = new MemoryStream();
+            using (var decompressedStream = new MemoryStream())
+            {
+                Serialise_Internal(decompressedStream, value, namingConvention);
+                
+                await Compressor.Compress(decompressedStream, compressedStream, compressionType).ConfigureAwait(false);
+            }
+            
+            return compressedStream;
+        }
+
         #endregion
 
 
