@@ -28,8 +28,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MessagePack;
 using UnityEngine;
+using ZeroFormatter;
 using CompressionType = Polaris.IO.Compression.CompressionType;
 
 namespace Polaris.IO
@@ -118,7 +118,7 @@ namespace Polaris.IO
             
             try
             {
-                Json.Write(Path.Combine(path, "json"), testObject, CompressionType.None);
+                Json.Write(Path.Combine(path, "json"), testObject);
                 return new TestResult(true, sw.Elapsed);
             }
             catch (Exception e)
@@ -132,7 +132,7 @@ namespace Polaris.IO
         {
             sw.Restart();
 
-            var content = Json.Read<TestObject>(Path.Combine(path, "json"), CompressionType.None);
+            var content = Json.Read<TestObject>(Path.Combine(path, "json"));
 
             return new TestResult(content.Equals(testObject), sw.Elapsed);
         }
@@ -143,7 +143,7 @@ namespace Polaris.IO
 
             try
             {
-                await Json.WriteAsync(Path.Combine(path, "json_async"), testObject, CompressionType.Zip);
+                await Json.WriteAsync(Path.Combine(path, "json_async"), testObject);
                 return new TestResult(true, sw.Elapsed);
             }
             catch (Exception e)
@@ -156,7 +156,7 @@ namespace Polaris.IO
         {
             sw.Restart();
 
-            var content = await Json.ReadAsync<TestObject>(Path.Combine(path, "json_async"), CompressionType.Zip);
+            var content = await Json.ReadAsync<TestObject>(Path.Combine(path, "json_async"));
             return new TestResult(content.Equals(testObject), sw.Elapsed);
         }
 
@@ -220,22 +220,18 @@ namespace Polaris.IO
         {
             sw.Restart();
 
-            try
-            {
-                Binary.Write(Path.Combine(path, "binary"), testObject, CompressionType.Lzma);
+            
+            
+                FastBinary.Write(Path.Combine(path, "binary"), testObject);
                 return new TestResult(true, sw.Elapsed);
-            }
-            catch (Exception e)
-            {
-                return new TestResult(false, sw.Elapsed);
-            }
+            
         }
 
         private TestResult BinaryRead()
         {
             sw.Restart();
 
-            var content = Binary.Read<TestObject>(Path.Combine(path, "binary"), CompressionType.Lzma);
+            var content = FastBinary.Read<TestObject>(Path.Combine(path, "binary"));
 
             return new TestResult(content.Equals(testObject), sw.Elapsed);
         }
@@ -246,7 +242,7 @@ namespace Polaris.IO
 
             try
             {
-                await Binary.WriteAsync(Path.Combine(path, "binary_async"), testObject, CompressionType.Zip);
+                await FastBinary.WriteAsync(Path.Combine(path, "binary_async"), testObject);
                 return new TestResult(true, sw.Elapsed);
             }
             catch (Exception e)
@@ -259,7 +255,7 @@ namespace Polaris.IO
         {
             sw.Restart();
 
-            var content = await Binary.ReadAsync<TestObject>(Path.Combine(path, "binary_async"), CompressionType.Zip);
+            var content = await FastBinary.ReadAsync<TestObject>(Path.Combine(path, "binary_async"));
 
             return new TestResult(content.Equals(testObject), sw.Elapsed);
         }
@@ -403,25 +399,27 @@ namespace Polaris.IO
         #endregion
 
         [Serializable]
-        [MessagePackObject(true)]
-        private class TestObject
+        [ZeroFormattable]
+        public class TestObject
         {
-            public string PlayerName { get; set; }
-            public bool ModsEnabled { get; set; } = true;
-            public int Kills { get; set; } = 353235;
-            public double Exp { get; set; } = 1122334455667788.8877665544332211;
-            public Dictionary<string, float> Location { get; set; } = new Dictionary<string, float>();
-            public List<string> ItemIDs { get; set; } = new List<string>();
-            public int[] HighestSeasonalLevels { get; set; } = {7, 4, 6, 2, 9};
-
-            public TestObject()
+            [Index(0)]
+            public virtual string PlayerName { get; set; }
+            [Index(1)]
+            public virtual bool ModsEnabled { get; set; } = true;
+            [Index(2)]
+            public virtual int Kills { get; set; } = 353235;
+            [Index(3)]
+            public virtual double Exp { get; set; } = 1122334455667788.8877665544332211;
+            
+            [Index(4)]
+            public virtual IList<string> ItemIDs { get; set; } = new List<string>();
+            [Index(5)]
+            public virtual int[] HighestSeasonalLevels { get; set; } = {7, 4, 6, 2, 9};
+            [Index(6)]
+            public virtual Dictionary<string, string> Stuff { get; set; } = new Dictionary<string, string>()
             {
-                Location["X"] = 250.25f;
-                Location["Y"] = 72f;
-                Location["Z"] = 3259.65f;
-
-                ItemIDs.Add("silverSword");
-            }
+                ["EZ"] = "lol"
+            };
 
             public override bool Equals(object obj)
             {

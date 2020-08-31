@@ -22,75 +22,37 @@
 //  SOFTWARE.
 
 using System;
-using System.IO;
+using System.Text;
 using System.Threading.Tasks;
-using MessagePack;
-using MessagePack.Resolvers;
 using UnityEngine;
+using ZeroFormatter;
 using CompressionType = Polaris.IO.Compression.CompressionType;
 
 namespace Polaris.IO
 {
     public static class FastBinary
     {
-        static bool serializerRegistered;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static void OnStart()
-        {
-            InitialiseMessagePackResolver();
-        }
-
-#if UNITY_EDITOR
-
-        [UnityEditor.InitializeOnLoadMethod]
-        static void EditorOnStart()
-        {
-            OnStart();
-        }
-
-#endif
-
-        // Required to allow MessagePack serialisation/deserialisation to work with IL2CPP (AOT).
-        static void InitialiseMessagePackResolver()
-        {
-            if (serializerRegistered)
-                return;
-
-            //StaticCompositeResolver.Instance.Register(GeneratedResolver.Instance, StandardResolver.Instance);
-
-            var option = MessagePackSerializerOptions.Standard.WithResolver(StaticCompositeResolver.Instance);
-
-            MessagePackSerializer.DefaultOptions = option;
-            serializerRegistered = true;
-        }
-        
-        
         #region Write
 
-        public static void Write(string fileLocation, object value)
+        public static void Write<T>(string fileLocation, T value) =>
+            Write(fileLocation, value, CompressionType.None);
+
+        public static void Write<T>(string fileLocation, T value, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Binary);
 
-            using (var stream = Text.GetStream(fileLocation))
-            {
-                MessagePackSerializer.Serialize(stream, value);
-            }
+            Text.Write(fileLocation, ZeroFormatterSerializer.Serialize(value), compressionType);
         }
 
-        public static void Write(string fileLocation, object value, CompressionType compressionType)
-        {
-            throw new NotImplementedException();
-        }
+        public static Task WriteAsync<T>(string fileLocation, T value) =>
+            WriteAsync(fileLocation, value, CompressionType.None);
 
-        public static Task WriteAsync(string fileLocation, object value)
+        public static async Task WriteAsync<T>(string fileLocation, T value, CompressionType compressionType)
         {
-            throw new NotImplementedException();
-        }
-
-        public static Task WriteAsync(string fileLocation, object value, CompressionType compressionType)
-        {
-            throw new NotImplementedException();
+            Utility.UpdateExtension(ref fileLocation, FileType.Binary);
+            
+            var bytes = ZeroFormatterSerializer.Serialize(value);
+            await Text.WriteAsync(fileLocation, bytes, compressionType).ConfigureAwait(false);
         }
 
         #endregion
@@ -98,29 +60,26 @@ namespace Polaris.IO
 
         #region Read
 
-        public static T Read<T>(string fileLocation)
-        {
-            Utility.UpdateExtension(ref fileLocation, FileType.Binary);
-
-            using (var stream = Text.GetStream(fileLocation))
-            {
-                return MessagePackSerializer.Deserialize<T>(stream);
-            }
-        }
+        public static T Read<T>(string fileLocation) => 
+            Read<T>(fileLocation, CompressionType.None);
 
         public static T Read<T>(string fileLocation, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            Utility.UpdateExtension(ref fileLocation, FileType.Binary);
+            
+            var bytes = Text.ReadAsBytes(fileLocation, compressionType);
+            return ZeroFormatterSerializer.Deserialize<T>(bytes);
         }
 
-        public static Task<T> ReadAsync<T>(string fileLocation)
-        {
-            throw new NotImplementedException();
-        }
+        public static Task<T> ReadAsync<T>(string fileLocation) =>
+            ReadAsync<T>(fileLocation, CompressionType.None);
 
-        public static Task<T> ReadAsync<T>(string fileLocation, CompressionType compressionType)
+        public static async Task<T> ReadAsync<T>(string fileLocation, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            Utility.UpdateExtension(ref fileLocation, FileType.Binary);
+
+            var bytes = await Text.ReadAsBytesAsync(fileLocation, compressionType).ConfigureAwait(false);
+            return ZeroFormatterSerializer.Deserialize<T>(bytes);
         }
         
         

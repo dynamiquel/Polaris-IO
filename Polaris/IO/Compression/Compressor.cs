@@ -26,8 +26,19 @@ using System.Threading.Tasks;
 
 namespace Polaris.IO.Compression
 {
+    /// <summary>
+    /// Responsible for compressing and decompressing data.
+    /// </summary>
     public static class Compressor
     {
+        /// <summary>
+        /// Reads the data from the input stream, compresses it using the specified compression algorithm,
+        /// then writes it to the output stream.
+        /// </summary>
+        /// <param name="inputStream">The stream to read uncompressed data from.</param>
+        /// <param name="outputStream">The stream to write compressed data to.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns></returns>
         public static async Task Compress(Stream inputStream, Stream outputStream, CompressionType compressionType = CompressionType.Zip)
         {
             switch (compressionType)
@@ -50,6 +61,14 @@ namespace Polaris.IO.Compression
             }
         }
         
+        /// <summary>
+        /// Reads the data from the input stream, decompresses it using the specified compression algorithm,
+        /// then writes it to the output stream.
+        /// </summary>
+        /// <param name="inputStream">The stream to read compressed data from.</param>
+        /// <param name="outputStream">The stream to write decompressed data to.</param>
+        /// <param name="compressionType">The type of decompression to use.</param>
+        /// <returns></returns>
         public static async Task Decompress(Stream inputStream, Stream outputStream, CompressionType compressionType = CompressionType.Zip)
         {
             switch (compressionType)

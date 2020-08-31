@@ -567,5 +567,25 @@ namespace Polaris.IO
         {
             return new MemoryStream(ReadAsBytes(fileLocation));
         }
+        
+        /// <summary>
+        /// Return the contents of the given file as a MemoryStream instead of a string or bytes.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <returns></returns>
+        public static MemoryStream GetStream(string fileLocation, CompressionType compressionType)
+        {
+            if (compressionType == CompressionType.None)
+                return GetStream(fileLocation);
+            
+            var decompressedStream = new MemoryStream();
+            using (var compressedStream =  new MemoryStream(ReadAsBytes(fileLocation)))
+            {
+                Task.Run(() => Compressor.Decompress(compressedStream, decompressedStream, compressionType)).GetAwaiter()
+                    .GetResult();
+            }
+
+            return decompressedStream;
+        }
     }
 }
