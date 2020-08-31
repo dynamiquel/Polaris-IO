@@ -1,6 +1,6 @@
 ﻿//  This file is part of Polaris-IO - An IO wrapper for Unity.
 //  https://github.com/dynamiquel/Polaris-IO
-//  Copyright (c) 2020 dynamiquel and contributors
+//  Copyright (c) 2020 dynamiquel
 
 //  MIT License
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,8 +21,15 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
 namespace Polaris.IO
 {
+    /// <summary>
+    /// Platform-independent implementation of <see cref="System.IO.Directory"/>.
+    /// </summary>
     public static class Directory
     {
         /// <summary>
@@ -32,11 +39,11 @@ namespace Polaris.IO
         /// <returns>True if the directory exists at the given file location.</returns>
         public static bool Exists(string directoryLocation)
         {
-            #if UNITY_WSA
+#if UNITY_WSA
             return UnityEngine.Windows.Directory.Exists(directoryLocation);
-            #else
+#else
             return System.IO.Directory.Exists(directoryLocation);
-            #endif
+#endif
         }
 
         /// <summary>
@@ -48,17 +55,64 @@ namespace Polaris.IO
         {
             if (Exists(directoryLocation))
             {
-                #if UNITY_WSA
+#if UNITY_WSA
                 UnityEngine.Windows.Directory.Delete(directoryLocation);
-                #else
+#else
                 System.IO.Directory.Delete(directoryLocation);
-                #endif
-
+#endif
                 return true;
             }
 
             return false;
         }
+        
+        /// <summary>
+        /// Creates a directory at the given directory location.
+        /// </summary>
+        /// <param name="directoryLocation">The path where you want to create the directory.</param>
+        /// <param name="recurse">If true, directories required to create the directory will be created.</param>
+        public static void Create(string directoryLocation, bool recurse = true)
+        {
+            if (Exists(directoryLocation))
+                return;
+
+            if (!recurse)
+            {
+                Create_Internal(directoryLocation);
+                return;
+            }
+                
+            var separators = new char[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar };
+
+            // Splits the directory path into a list consisting of directories.     ( C:/Users/Liam/AppData/ > [C:, Users, Liam, AppData, ] )
+            List<string> directories = directoryLocation.Split(separators).ToList();
+
+            // Removes the final element if it was an empty string.      ( C:/Users/Liam/AppData/ > [C:, Users, Liam, AppData] )
+            if (string.IsNullOrEmpty(directories[directories.Count - 1]))
+                directories.RemoveAt(directories.Count - 1);
+
+            var tempPath = new StringBuilder();
+
+            foreach (var directory in directories)
+            {
+                tempPath.Append(directory);
+                tempPath.Append(System.IO.Path.DirectorySeparatorChar);
+
+                var tempPathString = tempPath.ToString();
+
+                if (!Exists(tempPathString))
+                    Create_Internal(tempPathString);
+            }
+        }
+        
+        private static void Create_Internal(string directoryLocation)
+        {
+#if UNITY_WSA
+            UnityEngine.Windows.Directory.CreateDirectory(System.IO.Path.Combine(path));
+#else
+            System.IO.Directory.CreateDirectory(directoryLocation);
+#endif
+        } 
         
         /// <summary>
         /// If a temporary directory exists for the given directory location (Utility.GetTemporaryPath(directoryLocation), renames it to the given directory location; overwriting the previous directory.

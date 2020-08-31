@@ -1,6 +1,6 @@
 //  This file is part of Polaris-IO - An IO wrapper for Unity.
 //  https://github.com/dynamiquel/Polaris-IO
-//  Copyright (c) 2020 dynamiquel and contributors
+//  Copyright (c) 2020 dynamiquel
 
 //  MIT License
 //  Permission is hereby granted, free of charge, to any person obtaining a copy

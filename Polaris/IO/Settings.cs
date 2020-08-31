@@ -1,6 +1,6 @@
 //  This file is part of Polaris-IO - An IO wrapper for Unity.
 //  https://github.com/dynamiquel/Polaris-IO
-//  Copyright (c) 2020 dynamiquel and contributors
+//  Copyright (c) 2020 dynamiquel
 
 //  MIT License
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -42,15 +42,15 @@ namespace Polaris.IO
         /// When the file has been fully written, the <see cref="Polaris.IO.Settings.FileRecoveryExtension"/> is removed.
         /// </summary>
         public static bool EnableFileRecovery => false;
-        public static string FileRecoveryExtension => ".partial";
+        public static string FileRecoveryExtension => ".part";
     }
 
     [Flags]
     public enum FileType
     {
-        Text = 1,
-        Binary = 2,
-        Json = 4,
-        Yaml = 8
+        Text = 1 << 0,
+        Binary = 1 << 1,
+        Json = 1 << 2,
+        Yaml = 1 << 3
     }
 }

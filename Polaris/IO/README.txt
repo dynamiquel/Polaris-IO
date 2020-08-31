@@ -1,11 +1,11 @@
-﻿Polaris-IO Beta 2004.1
+﻿Polaris-IO Beta 2009
 https://github.com/dynamiquel/Polaris-IO
 
 ADDING TO YOUR UNITY PROJECT:
     - Extract the 'Plugins' folder to your project's 'Assets' folder.
 
 LICENSE:
-    Copyright (c) 2020 dynamiquel and contributors
+    Copyright (c) 2020 dynamiquel
     
     MIT License
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,17 +28,22 @@ LICENSE:
 
 
 KNOWN ISSUES:
-    - File Recovery doesn't work with 'Binary.Write()' or 'Binary.TryWrite()'.
-      Workarounds: Use 'Binary.WriteAsync()' or set 'Settings.EnableFileRecovery' to false.
+    - Probably not an issue but LZ4 doesn't perform much faster than GZIP.
+    - Yaml can't deserialise the 'textExample' string. Cannot find the exact reason.
+      Seems to be when the '>+' symbol is used.
     
     
 NOT YET TESTED:
     - Any platform other than 'Windows Standalone'.
-    - File Recovery on large files (> 2 MBs).
-    - Folder Recovery.
-    - 'TryRead()' and 'TryWrite()'.
+    - Yaml has only been lightly tested.
+    - Binary has only been lighty tested.
+    - Fast Binary has only been lighly tested.
+    - Directory.Create.
 
 
 NOT YET IMPLEMENTED:
     - Backup system.
-    - Any platform support other than 'Windows Standalone' and 'UWP'.
+    - Any platform support other than 'Standalone' and 'UWP'.
+    - Attributes.
+    - Json Naming Conventions: Snake-case and Kebab-case.
+    - Built in encryption support.
