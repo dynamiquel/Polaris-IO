@@ -242,7 +242,7 @@ namespace Polaris.IO
 
             try
             {
-                await FastBinary.WriteAsync(Path.Combine(path, "binary_async"), testObject);
+                await Binary.WriteAsync(Path.Combine(path, "binary_async"), testObject, CompressionType.Lzma);
                 return new TestResult(true, sw.Elapsed);
             }
             catch (Exception e)
@@ -255,7 +255,7 @@ namespace Polaris.IO
         {
             sw.Restart();
 
-            var content = await FastBinary.ReadAsync<TestObject>(Path.Combine(path, "binary_async"));
+            var content = await Binary.ReadAsync<TestObject>(Path.Combine(path, "binary_async"), CompressionType.Lzma);
 
             return new TestResult(content.Equals(testObject), sw.Elapsed);
         }

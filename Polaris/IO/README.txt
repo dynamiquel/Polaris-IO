@@ -37,13 +37,13 @@ NOT YET TESTED:
     - Any platform other than 'Windows Standalone'.
     - Yaml has only been lightly tested.
     - Binary has only been lighty tested.
+    - Fast Binary has only been lighly tested.
     - Directory.Create.
 
 
 NOT YET IMPLEMENTED:
     - Backup system.
     - Any platform support other than 'Standalone' and 'UWP'.
-    - Binary.
     - Attributes.
     - Json Naming Conventions: Snake-case and Kebab-case.
-    - Binary documentation.
+    - Built in encryption support.

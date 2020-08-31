@@ -22,8 +22,10 @@
 //  SOFTWARE.
 
 using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Polaris.IO.Compression;
 using UnityEngine;
 using ZeroFormatter;
 using CompressionType = Polaris.IO.Compression.CompressionType;
@@ -34,9 +36,22 @@ namespace Polaris.IO
     {
         #region Write
 
+        /// <summary>
+        /// Creates a new file, converts the value to binary, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to binary.</param>
         public static void Write<T>(string fileLocation, T value) =>
             Write(fileLocation, value, CompressionType.None);
 
+        /// <summary>
+        /// Creates a new file, converts the value to binary, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to binary.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
         public static void Write<T>(string fileLocation, T value, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Binary);
@@ -44,9 +59,22 @@ namespace Polaris.IO
             Text.Write(fileLocation, ZeroFormatterSerializer.Serialize(value), compressionType);
         }
 
+        /// <summary>
+        /// Creates a new file, converts the value to binary, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to binary.</param>
         public static Task WriteAsync<T>(string fileLocation, T value) =>
             WriteAsync(fileLocation, value, CompressionType.None);
 
+        /// <summary>
+        /// Creates a new file, converts the value to binary, writes the contents to the file, and then closes the file.
+        /// If the target file already exists, it is overwritten.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to convert to binary.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
         public static async Task WriteAsync<T>(string fileLocation, T value, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Binary);
@@ -60,9 +88,23 @@ namespace Polaris.IO
 
         #region Read
 
+        /// <summary>
+        /// Opens a binary file, parses the text in the file into a single object specified by a generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T Read<T>(string fileLocation) => 
             Read<T>(fileLocation, CompressionType.None);
 
+        /// <summary>
+        /// Opens a binary file, parses the text in the file into a single object specified by a generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static T Read<T>(string fileLocation, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Binary);
@@ -71,9 +113,23 @@ namespace Polaris.IO
             return ZeroFormatterSerializer.Deserialize<T>(bytes);
         }
 
+        /// <summary>
+        /// Opens a binary file, parses the text in the file into a single object specified by a generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static Task<T> ReadAsync<T>(string fileLocation) =>
             ReadAsync<T>(fileLocation, CompressionType.None);
 
+        /// <summary>
+        /// Opens a binary file, parses the text in the file into a single object specified by a generic type parameter, and then closes the file.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
         public static async Task<T> ReadAsync<T>(string fileLocation, CompressionType compressionType)
         {
             Utility.UpdateExtension(ref fileLocation, FileType.Binary);
@@ -88,24 +144,74 @@ namespace Polaris.IO
 
         #region Try
 
-        public static bool TryRead<T>(string fileLocation, out T result)
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Attempts to open a binary file,
+        /// parse the text in the file into a single object specified by a generic type parameter,
+        /// and then close the file. Catches all exceptions. Returns true if successful.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="result">The object of the specified generic type parameter parsed from JSON.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>Returns true if successful.</returns>
+        public static bool TryRead<T>(string fileLocation, out T result) => 
+            TryRead<T>(fileLocation, CompressionType.None, out result);
 
+        /// <summary>
+        /// Attempts to open a binary file,
+        /// parse the text in the file into a single object specified by a generic type parameter,
+        /// and then close the file. Catches all exceptions. Returns true if successful.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <param name="result">The object of the specified generic type parameter parsed from JSON.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>Returns true if successful.</returns>
         public static bool TryRead<T>(string fileLocation, CompressionType compressionType, out T result)
         {
-            throw new NotImplementedException();
+            try
+            {
+                result = Read<T>(fileLocation, compressionType);
+                return true;
+            }
+            catch (Exception e)
+            {
+                result = default;
+                return false;
+            }
         }
 
-        public static bool TryWrite(string fileLocation, object value)
-        {
-            throw new NotImplementedException();
-        }
+        /// <summary>
+        /// Attempts to create a new file, convert the value to binary, write the contents to the file, and then close the file.
+        /// If the target file already exists, it is overwritten.
+        /// Catches all exceptions. Returns true if successful.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to parse to binary.</param>
+        /// <returns>Returns true if successful.</returns>
+        public static bool TryWrite(string fileLocation, object value) =>
+            TryWrite(fileLocation, value, CompressionType.None);
 
+        /// <summary>
+        /// Attempts to create a new file, convert the value to binary, write the contents to the file, and then close the file.
+        /// If the target file already exists, it is overwritten.
+        /// Catches all exceptions. Returns true if successful.
+        /// </summary>
+        /// <param name="fileLocation"></param>
+        /// <param name="value">The object to parse to binary.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns>Returns true if successful.</returns>
         public static bool TryWrite(string fileLocation, object value, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            try
+            {
+                Write(fileLocation, value, compressionType);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
         
         #endregion
@@ -113,24 +219,80 @@ namespace Polaris.IO
 
         #region Read Bytes
 
-        public static T ReadFromBytes<T>(byte[] bytes)
+        /// <summary>
+        /// Parses the  encoded bytes representing a binary-formatted value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
+        public static T FromBytes<T>(byte[] bytes)
         {
-            throw new NotImplementedException();
+            return ZeroFormatterSerializer.Deserialize<T>(bytes);
+        }
+        
+        /// <summary>
+        /// Parses the  encoded bytes representing a binary-formatted value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
+        public static T FromBytes<T>(byte[] bytes, CompressionType compressionType)
+        {
+            if (compressionType == CompressionType.None)
+                return FromBytes<T>(bytes);
+            
+            using (var decompressedStream = new MemoryStream())
+            {
+                using (var compressedStream = new MemoryStream(bytes))
+                {
+                    Task.Run(() =>
+                        Compressor.Decompress(compressedStream, decompressedStream, compressionType)).GetAwaiter().GetResult();
+                }
+
+                return ZeroFormatterSerializer.Deserialize<T>(decompressedStream);
+            }
         }
 
-        public static T ReadFromBytes<T>(byte[] bytes, CompressionType compressionType)
+        /// <summary>
+        /// Parses the  encoded bytes representing a binary-formatted value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
+        public static async Task<T> FromBytesAsync<T>(byte[] bytes)
         {
-            throw new NotImplementedException();
+            return await Task.Run(() => FromBytes<T>(bytes)).ConfigureAwait(false);
         }
 
-        public static Task<T> ReadFromBytesAsync<T>(byte[] bytes)
+        /// <summary>
+        /// Parses the  encoded bytes representing a binary-formatted value into an instance of the type specified by
+        /// a generic type parameter.
+        /// </summary>
+        /// <param name="bytes">The bytes to parse.</param>
+        /// <param name="compressionType">The type of decompression to use.
+        /// Must match the type of compression used to write the file.</param>
+        /// <typeparam name="T">The type of object to create an instance of.</typeparam>
+        /// <returns>An instance of the specified generic type parameter.</returns>
+        public static async Task<T> FromBytesAsync<T>(byte[] bytes, CompressionType compressionType)
         {
-            throw new NotImplementedException();
-        }
+            if (compressionType == CompressionType.None)
+                return await FromBytesAsync<T>(bytes).ConfigureAwait(false);
+            
+            using (var decompressedStream = new MemoryStream())
+            {
+                using (var compressedStream = new MemoryStream(bytes))
+                {
+                    await Compressor.Decompress(compressedStream, decompressedStream, compressionType)
+                        .ConfigureAwait(false);
+                }
 
-        public static Task<T> ReadFromBytesAsync<T>(byte[] bytes, CompressionType compressionType)
-        {
-            throw new NotImplementedException();
+                return ZeroFormatterSerializer.Deserialize<T>(decompressedStream);
+            }
         }
         
         #endregion
@@ -138,51 +300,77 @@ namespace Polaris.IO
 
         #region Get Bytes
 
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a binary-formatted array of bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to binary.</param>
+        /// <returns>A binary-formatted array of bytes, parsed from the given object.</returns>
         public static byte[] GetBytes(object value)
         {
-            throw new NotImplementedException();
+            return ZeroFormatterSerializer.Serialize(value);
         }
 
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a binary-formatted array of bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to binary.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns>A binary-formatted array of bytes, parsed from the given object.</returns>
         public static byte[] GetBytes(object value, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            var bytes = GetBytes(value);
+
+            if (compressionType == CompressionType.None)
+                return bytes;
+
+            using (var compressedStream = new MemoryStream())
+            {
+                using (var decompressedStream = new MemoryStream(bytes))
+                {
+                    Task.Run(() =>
+                            Compressor.Compress(decompressedStream, compressedStream, compressionType)).GetAwaiter()
+                        .GetResult();
+                }
+
+                return compressedStream.ToArray();
+            }
         }
 
-        public static Task<byte[]> GetBytesAsync(object value)
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a binary-formatted array of bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to binary.</param>
+        /// <returns>A binary-formatted array of bytes, parsed from the given object.</returns>
+        public static async Task<byte[]> GetBytesAsync(object value)
         {
-            throw new NotImplementedException();
+            return await Task.Run(() => GetBytes(value)).ConfigureAwait(false);
         }
 
-        public static Task<byte[]> GetBytesAsync(object value, CompressionType compressionType)
+        /// <summary>
+        /// Converts the value of a type specified by a generic type parameter into a binary-formatted array of bytes.
+        /// </summary>
+        /// <param name="value">The object to parse to binary.</param>
+        /// <param name="compressionType">The type of compression to use.</param>
+        /// <returns>A binary-formatted array of bytes, parsed from the given object.</returns>
+        public static async Task<byte[]> GetBytesAsync(object value, CompressionType compressionType)
         {
-            throw new NotImplementedException();
+            var bytes = await GetBytesAsync(value).ConfigureAwait(false);
+
+            if (compressionType == CompressionType.None)
+                return bytes;
+
+            using (var compressedStream = new MemoryStream())
+            {
+                using (var decompressedStream = new MemoryStream(bytes))
+                {
+                    await Compressor.Compress(decompressedStream, compressedStream, compressionType)
+                        .ConfigureAwait(false);
+                }
+
+                return compressedStream.ToArray();
+            }
         }
 
-        #endregion
-        
-        
-        #region Direct
-        
-        public static void WriteDirect(string fileLocation, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static Task WriteDirectAsync(string fileLocation, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static T ReadDirect<T>(string fileLocation)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static Task<T> ReadDirectAsync<T>(string fileLocation)
-        {
-            throw new NotImplementedException();
-        }
-        
         #endregion
     }
 }
